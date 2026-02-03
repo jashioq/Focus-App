@@ -35,7 +35,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
             implementation(libs.androidx.startup.runtime)
-            implementation(libs.android.driver)
+            implementation(libs.lifecycle.process)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -50,15 +50,11 @@ kotlin {
             implementation(libs.lifecycle.viewmodel)
             implementation(libs.navigation.compose)
             implementation((libs.kotlinx.serialization.json))
-            implementation(libs.coroutines.extensions)
             implementation(libs.stately.common)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             api(libs.koin.core)
             api(libs.datastore.preferences)
             api(libs.datastore)
-        }
-        iosMain.dependencies {
-            implementation(libs.sqldelight.native.driver)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

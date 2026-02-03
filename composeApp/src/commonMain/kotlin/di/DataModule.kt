@@ -9,4 +9,10 @@ val dataModule = module {
             dataStore = get(),
         )
     }
+
+    single<domain.repository.AppStateRepository> {
+        data.repository.AppStateRepository(
+            appStateObserver = get(),
+        )
+    }
 }

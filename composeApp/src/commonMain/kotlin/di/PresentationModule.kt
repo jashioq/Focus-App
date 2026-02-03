@@ -1,5 +1,6 @@
 package di
 
+import domain.useCase.EmitAppFocusStateUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
 import navigation.viewModel.NavigationViewModel
@@ -21,6 +22,8 @@ val presentationModule = module {
     }
 
     factory {
-        HomeScreenViewModel()
+        HomeScreenViewModel(
+            emitAppFocusStateUseCase = get<EmitAppFocusStateUseCase>(),
+        )
     }
 }

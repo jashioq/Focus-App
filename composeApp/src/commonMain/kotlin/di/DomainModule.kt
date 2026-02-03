@@ -1,5 +1,6 @@
 package di
 
+import domain.useCase.EmitAppFocusStateUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
 import org.koin.dsl.module
@@ -14,6 +15,12 @@ val domainModule = module {
     factory {
         EmitOnboardingFinishedUseCase(
             dataStoreRepository = get(),
+        )
+    }
+
+    factory {
+        EmitAppFocusStateUseCase(
+            appStateRepository = get()
         )
     }
 }
