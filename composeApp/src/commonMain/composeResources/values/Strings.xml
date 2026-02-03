@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="sample_start_button">START</string>
+    <string name="sample_home_screen_message">This is home</string>
+    <string name="who_are_you_title">Who are you?</string>
+    <string name="enter_name">Enter your name</string>
+    <string name="text_field_placeholder">Aa</string>
+</resources>
