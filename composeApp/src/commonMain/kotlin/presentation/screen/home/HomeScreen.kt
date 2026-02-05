@@ -12,5 +12,18 @@ fun HomeScreen(
 ) {
     val state by homeScreenViewModel.state.collectAsState()
 
-    HomeScreenView()
+    HomeScreenView(
+        timerText = state.timerText,
+        isRunning = state.isRunning,
+        isPaused = state.isPaused,
+        onShowNotification = {
+            homeScreenViewModel.sendAction(HomeScreenAction.ShowNotification)
+        },
+        onDismissNotification = {
+            homeScreenViewModel.sendAction(HomeScreenAction.DismissNotification)
+        },
+        onTogglePausePlay = {
+            homeScreenViewModel.sendAction(HomeScreenAction.TogglePausePlay)
+        },
+    )
 }
