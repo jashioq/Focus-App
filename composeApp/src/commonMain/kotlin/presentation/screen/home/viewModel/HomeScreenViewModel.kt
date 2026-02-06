@@ -15,6 +15,7 @@ import presentation.screen.home.HomeScreenAction
 import presentation.screen.home.HomeScreenState
 import presentation.util.CoreViewModel
 import util.Logger
+import kotlin.jvm.JvmName
 
 class HomeScreenViewModel(
     private val startLiveTimerNotificationUseCase: UseCase<StartLiveTimerNotificationParams, Unit>,
@@ -178,6 +179,6 @@ class HomeScreenViewModel(
     private fun formatTime(seconds: Int): String {
         val m = seconds / 60
         val s = seconds % 60
-        return String.format("%02d:%02d", m, s)
+        return ("$m:$s")
     }
 }

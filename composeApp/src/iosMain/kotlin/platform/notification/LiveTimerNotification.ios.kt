@@ -9,7 +9,7 @@ actual class LiveTimerNotification {
     actual val toggleState: Flow<TimerToggleState> = emptyFlow()
 
     actual fun start(mode: TimerMode, timeLeftSeconds: Int, totalTimeSeconds: Int, isPaused: Boolean) {
-        println("LiveTimerNotification.start(mode=$mode, timeLeft=$timeLeftSeconds, total=$totalTimeSeconds, isPaused=$isPaused)")
+        LiveActivityBridge.start(leftText = "te", rightText = "st")
     }
 
     actual fun update(
@@ -18,10 +18,10 @@ actual class LiveTimerNotification {
         totalTimeSeconds: Int?,
         isPaused: Boolean?,
     ) {
-        println("LiveTimerNotification.update(mode=$mode, timeLeft=$timeLeftSeconds, total=$totalTimeSeconds, isPaused=$isPaused)")
+        // No-op for static content
     }
 
     actual fun stop() {
-        println("LiveTimerNotification.stop()")
+        LiveActivityBridge.stop()
     }
 }
