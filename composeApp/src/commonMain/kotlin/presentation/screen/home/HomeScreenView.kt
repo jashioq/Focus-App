@@ -53,21 +53,18 @@ fun HomeScreenView(
         ) {
             Button(
                 onClick = onShowNotification,
-                enabled = !isRunning,
             ) {
                 androidx.compose.material3.Text("Start")
             }
 
             Button(
                 onClick = onTogglePausePlay,
-                enabled = isRunning,
             ) {
                 androidx.compose.material3.Text(if (isPaused) "Resume" else "Pause")
             }
 
             Button(
                 onClick = onDismissNotification,
-                enabled = isRunning,
             ) {
                 androidx.compose.material3.Text("Dismiss")
             }
