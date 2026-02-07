@@ -40,6 +40,7 @@ class TimerForegroundService : Service() {
         const val EXTRA_IS_PAUSED = "extra_is_paused"
 
         const val BROADCAST_TIMER_UPDATE = "com.jan.focus.TIMER_UPDATE"
+        const val BROADCAST_DISMISSED = "com.jan.focus.TIMER_DISMISSED"
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -107,6 +108,7 @@ class TimerForegroundService : Service() {
             ACTION_DISMISSED -> {
                 isInForeground = false
                 countdownJob?.cancel()
+                broadcastDismissed()
             }
             ACTION_STOP -> {
                 countdownJob?.cancel()
@@ -140,6 +142,13 @@ class TimerForegroundService : Service() {
                 }
             }
         }
+    }
+
+    private fun broadcastDismissed() {
+        val intent = Intent(BROADCAST_DISMISSED).apply {
+            setPackage(packageName)
+        }
+        sendBroadcast(intent)
     }
 
     private fun broadcastTimerUpdate() {

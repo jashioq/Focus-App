@@ -1,5 +1,6 @@
 package platform.notification
 
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,6 +17,33 @@ import org.koin.core.component.inject
 
 actual class LiveTimerNotification : KoinComponent {
     private val context: Context by inject()
+
+    actual val notificationDismissedFlow: Flow<Unit> = callbackFlow {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                if (intent?.action == TimerForegroundService.BROADCAST_DISMISSED) {
+                    trySend(Unit)
+                }
+            }
+        }
+
+        val filter = IntentFilter(TimerForegroundService.BROADCAST_DISMISSED)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(receiver, filter)
+        }
+
+        awaitClose {
+            context.unregisterReceiver(receiver)
+        }
+    }
+
+    actual fun isNotificationActive(): Boolean {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        return nm.activeNotifications.any { it.id == TimerForegroundService.NOTIFICATION_ID }
+    }
 
     actual val timerUpdateFlow: Flow<Timer> = callbackFlow {
         val receiver = object : BroadcastReceiver() {

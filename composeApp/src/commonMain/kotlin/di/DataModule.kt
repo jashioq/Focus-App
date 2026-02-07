@@ -20,6 +20,7 @@ val dataModule = module {
     single<domain.repository.TimerRepository> {
         TimerRepository(
             liveTimerNotification = get(),
+            dataStoreRepository = get(),
         )
     }
 }

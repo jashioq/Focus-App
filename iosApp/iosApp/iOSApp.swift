@@ -6,5 +6,8 @@ struct iOSApp: App {
         WindowGroup {
             ContentView()
         }
+        .backgroundTask(.appRefresh("com.jan.focus.blockTransition")) {
+            // No-op: waking the app is enough for the pending delay() to fire
+        }
     }
 }

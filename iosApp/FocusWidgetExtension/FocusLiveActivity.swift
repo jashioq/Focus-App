@@ -7,11 +7,11 @@ struct FocusLiveActivity: Widget {
         ActivityConfiguration(for: FocusActivityAttributes.self) { context in
             // Lock Screen / Banner view
             HStack {
-                Text(context.state.leftText)
-                    .font(.headline)
                 Spacer()
-                Text(context.state.rightText)
-                    .font(.headline)
+                timerView(state: context.state)
+                    .font(.system(size: 48, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                Spacer()
             }
             .padding()
             .activityBackgroundTint(Color.black.opacity(0.8))
@@ -19,41 +19,41 @@ struct FocusLiveActivity: Widget {
 
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded view
-                DynamicIslandExpandedRegion(.leading) {
-                    Text(context.state.leftText)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                }
-
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.rightText)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                }
-
                 DynamicIslandExpandedRegion(.center) {
-                    EmptyView()
+                    timerView(state: context.state)
+                        .font(.system(size: 36, weight: .bold, design: .monospaced))
                 }
 
-                DynamicIslandExpandedRegion(.bottom) {
-                    EmptyView()
-                }
+                DynamicIslandExpandedRegion(.leading) { EmptyView() }
+                DynamicIslandExpandedRegion(.trailing) { EmptyView() }
+                DynamicIslandExpandedRegion(.bottom) { EmptyView() }
 
             } compactLeading: {
-                Text(context.state.leftText)
-                    .font(.caption)
+                timerView(state: context.state)
+                    .font(.system(.caption, design: .monospaced))
                     .fontWeight(.semibold)
 
             } compactTrailing: {
-                Text(context.state.rightText)
-                    .font(.caption)
-                    .fontWeight(.semibold)
+                EmptyView()
 
             } minimal: {
-                Text(context.state.leftText)
-                    .font(.caption2)
+                timerView(state: context.state)
+                    .font(.system(.caption2, design: .monospaced))
             }
+        }
+    }
+
+    @ViewBuilder
+    private func timerView(state: FocusActivityAttributes.ContentState) -> some View {
+        if state.isPaused, let pauseDate = state.pauseDate {
+            let remaining = Int(state.endDate.timeIntervalSince(pauseDate))
+            let m = max(remaining, 0) / 60
+            let s = max(remaining, 0) % 60
+            Text(String(format: "%02d:%02d", m, s))
+        } else if Date() < state.endDate {
+            Text(timerInterval: Date()...state.endDate, countsDown: true, showsHours: false)
+        } else {
+            Text("00:00")
         }
     }
 }
