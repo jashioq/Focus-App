@@ -1,11 +1,10 @@
-package platform.notification
+package domain.repository
 
 import domain.model.Timer
 import kotlinx.coroutines.flow.Flow
 
-expect class LiveTimerNotification {
-    val timerUpdateFlow: Flow<Timer>
-
+interface TimerRepository {
+    val timerFlow: Flow<Timer?>
     fun start(timer: Timer)
     fun stop()
     fun pause()

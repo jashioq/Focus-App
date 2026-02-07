@@ -1,11 +1,12 @@
 package di
 
 import domain.useCase.EmitOnboardingFinishedUseCase
-import domain.useCase.EmitTimerToggleStateUseCase
+import domain.useCase.EmitTimerFlowUseCase
+import domain.useCase.PauseTimerUseCase
+import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
-import domain.useCase.StartLiveTimerNotificationUseCase
-import domain.useCase.StopLiveTimerNotificationUseCase
-import domain.useCase.UpdateLiveTimerNotificationUseCase
+import domain.useCase.StartTimerUseCase
+import domain.useCase.StopTimerUseCase
 import navigation.viewModel.NavigationViewModel
 import org.koin.dsl.module
 import presentation.screen.home.viewModel.HomeScreenViewModel
@@ -26,10 +27,11 @@ val presentationModule = module {
 
     factory {
         HomeScreenViewModel(
-            startLiveTimerNotificationUseCase = get<StartLiveTimerNotificationUseCase>(),
-            updateLiveTimerNotificationUseCase = get<UpdateLiveTimerNotificationUseCase>(),
-            stopLiveTimerNotificationUseCase = get<StopLiveTimerNotificationUseCase>(),
-            emitTimerToggleStateUseCase = get<EmitTimerToggleStateUseCase>(),
+            startTimerUseCase = get<StartTimerUseCase>(),
+            stopTimerUseCase = get<StopTimerUseCase>(),
+            pauseTimerUseCase = get<PauseTimerUseCase>(),
+            resumeTimerUseCase = get<ResumeTimerUseCase>(),
+            emitTimerFlowUseCase = get<EmitTimerFlowUseCase>(),
         )
     }
 }

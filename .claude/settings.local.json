@@ -6,7 +6,9 @@
       "Bash(tree:*)",
       "Bash(ls \"c:\\\\Users\\\\Jan\\\\Desktop\\\\kotlin-multiplatform-app\\\\composeApp\\\\src\\\\androidMain\\\\res\"\" 2>nul || echo \"No res directory \")",
       "Bash(./gradlew compileKotlinAndroid:*)",
-      "Bash(./gradlew compileDebugKotlinAndroid:*)"
+      "Bash(./gradlew compileDebugKotlinAndroid:*)",
+      "Bash(./gradlew composeApp:assembleDebug:*)",
+      "Bash(./gradlew composeApp:compileKotlinAndroid:*)"
     ]
   }
 }

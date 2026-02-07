@@ -12,6 +12,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.jan.focus.MainActivity
 import com.jan.focus.R
+import domain.model.TimerMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +20,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import platform.model.TimerMode
 
 class TimerForegroundService : Service() {
 
@@ -28,29 +28,31 @@ class TimerForegroundService : Service() {
         const val CHANNEL_ID = "timer_channel"
 
         const val ACTION_START = "platform.notification.ACTION_START"
-        const val ACTION_UPDATE = "platform.notification.ACTION_UPDATE"
+        const val ACTION_PAUSE = "platform.notification.ACTION_PAUSE"
+        const val ACTION_RESUME = "platform.notification.ACTION_RESUME"
         const val ACTION_STOP = "platform.notification.ACTION_STOP"
         const val ACTION_DISMISSED = "platform.notification.ACTION_DISMISSED"
-
         const val ACTION_TOGGLE_REQUEST = "platform.notification.ACTION_TOGGLE_REQUEST"
 
-        const val EXTRA_MODE = "extra_mode"
-        const val EXTRA_TIME_LEFT = "extra_time_left"
-        const val EXTRA_TOTAL_TIME = "extra_total_time"
+        const val EXTRA_BLOCK_SECONDS = "extra_block_seconds"
+        const val EXTRA_BLOCK_MODES = "extra_block_modes"
+        const val EXTRA_SECONDS_ELAPSED = "extra_seconds_elapsed"
         const val EXTRA_IS_PAUSED = "extra_is_paused"
 
-        const val BROADCAST_PAUSE_REQUESTED = "com.jan.focus.PAUSE_REQUESTED"
-        const val BROADCAST_RESUME_REQUESTED = "com.jan.focus.RESUME_REQUESTED"
+        const val BROADCAST_TIMER_UPDATE = "com.jan.focus.TIMER_UPDATE"
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var countdownJob: Job? = null
 
-    private var mode: String = TimerMode.FOCUS.name
-    private var timeLeft: Int = 0
-    private var totalTime: Int = 0
+    private var blockSeconds: IntArray = intArrayOf()
+    private var blockModes: Array<String> = emptyArray()
+    private var secondsElapsed: Int = 0
     private var isPaused: Boolean = false
     private var isInForeground: Boolean = false
+
+    private val totalTime: Int
+        get() = blockSeconds.sum()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -62,47 +64,45 @@ class TimerForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                mode = intent.getStringExtra(EXTRA_MODE) ?: TimerMode.FOCUS.name
-                timeLeft = intent.getIntExtra(EXTRA_TIME_LEFT, 0)
-                totalTime = intent.getIntExtra(EXTRA_TOTAL_TIME, 0)
+                blockSeconds = intent.getIntArrayExtra(EXTRA_BLOCK_SECONDS) ?: intArrayOf()
+                blockModes = intent.getStringArrayExtra(EXTRA_BLOCK_MODES) ?: emptyArray()
+                secondsElapsed = intent.getIntExtra(EXTRA_SECONDS_ELAPSED, 0)
                 isPaused = intent.getBooleanExtra(EXTRA_IS_PAUSED, false)
 
-                startForeground(NOTIFICATION_ID, buildNotification())
-                isInForeground = true
+                if (isInForeground) {
+                    notificationManager.notify(NOTIFICATION_ID, buildNotification())
+                } else {
+                    startForeground(NOTIFICATION_ID, buildNotification())
+                    isInForeground = true
+                }
 
+                countdownJob?.cancel()
                 if (!isPaused) {
                     startCountdown()
                 }
             }
-            ACTION_UPDATE -> {
+            ACTION_PAUSE -> {
                 if (!isInForeground) return START_STICKY
-
-                intent.getStringExtra(EXTRA_MODE)?.let { mode = it }
-                if (intent.hasExtra(EXTRA_TIME_LEFT)) {
-                    timeLeft = intent.getIntExtra(EXTRA_TIME_LEFT, timeLeft)
-                }
-                if (intent.hasExtra(EXTRA_TOTAL_TIME)) {
-                    totalTime = intent.getIntExtra(EXTRA_TOTAL_TIME, totalTime)
-                }
-                if (intent.hasExtra(EXTRA_IS_PAUSED)) {
-                    val wasPaused = isPaused
-                    isPaused = intent.getBooleanExtra(EXTRA_IS_PAUSED, isPaused)
-
-                    if (wasPaused && !isPaused) {
-                        startCountdown()
-                    } else if (!wasPaused && isPaused) {
-                        countdownJob?.cancel()
-                    }
-                }
-
+                isPaused = true
+                countdownJob?.cancel()
                 notificationManager.notify(NOTIFICATION_ID, buildNotification())
             }
+            ACTION_RESUME -> {
+                if (!isInForeground) return START_STICKY
+                isPaused = false
+                notificationManager.notify(NOTIFICATION_ID, buildNotification())
+                startCountdown()
+            }
             ACTION_TOGGLE_REQUEST -> {
+                if (!isInForeground) return START_STICKY
+                isPaused = !isPaused
                 if (isPaused) {
-                    sendBroadcast(Intent(BROADCAST_RESUME_REQUESTED).setPackage(packageName))
+                    countdownJob?.cancel()
                 } else {
-                    sendBroadcast(Intent(BROADCAST_PAUSE_REQUESTED).setPackage(packageName))
+                    startCountdown()
                 }
+                notificationManager.notify(NOTIFICATION_ID, buildNotification())
+                broadcastTimerUpdate()
             }
             ACTION_DISMISSED -> {
                 isInForeground = false
@@ -126,14 +126,43 @@ class TimerForegroundService : Service() {
     private fun startCountdown() {
         countdownJob?.cancel()
         countdownJob = serviceScope.launch {
-            while (timeLeft > 0 && !isPaused) {
+            while (secondsElapsed < totalTime && !isPaused) {
                 delay(1000)
-                timeLeft--
+                secondsElapsed++
                 if (isInForeground) {
+                    if (secondsElapsed >= totalTime) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        isInForeground = false
+                        stopSelf()
+                        return@launch
+                    }
                     notificationManager.notify(NOTIFICATION_ID, buildNotification())
                 }
             }
         }
+    }
+
+    private fun broadcastTimerUpdate() {
+        val intent = Intent(BROADCAST_TIMER_UPDATE).apply {
+            setPackage(packageName)
+            putExtra(EXTRA_BLOCK_SECONDS, blockSeconds)
+            putExtra(EXTRA_BLOCK_MODES, blockModes)
+            putExtra(EXTRA_SECONDS_ELAPSED, secondsElapsed)
+            putExtra(EXTRA_IS_PAUSED, isPaused)
+        }
+        sendBroadcast(intent)
+    }
+
+    private fun getCurrentBlock(): Pair<String, Int>? {
+        var cumulative = 0
+        for (i in blockSeconds.indices) {
+            cumulative += blockSeconds[i]
+            if (secondsElapsed < cumulative) {
+                val secondsInBlock = secondsElapsed - (cumulative - blockSeconds[i])
+                return Pair(blockModes[i], secondsInBlock)
+            }
+        }
+        return null
     }
 
     private val notificationManager: NotificationManager
@@ -154,8 +183,24 @@ class TimerForegroundService : Service() {
     private fun buildNotification(): Notification {
         val remoteViews = RemoteViews(packageName, R.layout.notification_timer)
 
-        val minutes = timeLeft / 60
-        val seconds = timeLeft % 60
+        val currentBlock = getCurrentBlock()
+        val currentMode = currentBlock?.first ?: TimerMode.FOCUS.name
+        val secondsInBlock = currentBlock?.second ?: 0
+
+        var blockIndex = 0
+        var cumulative = 0
+        for (i in blockSeconds.indices) {
+            cumulative += blockSeconds[i]
+            if (secondsElapsed < cumulative) {
+                blockIndex = i
+                break
+            }
+        }
+        val blockTotalSeconds = blockSeconds.getOrElse(blockIndex) { 1 }
+        val timeLeftInBlock = blockTotalSeconds - secondsInBlock
+
+        val minutes = timeLeftInBlock / 60
+        val seconds = timeLeftInBlock % 60
         val timerText = String.format("%02d:%02d", minutes, seconds)
         remoteViews.setTextViewText(R.id.tv_timer, timerText)
 
@@ -165,10 +210,10 @@ class TimerForegroundService : Service() {
             remoteViews.setFloat(R.id.tv_timer, "setAlpha", 1.0f)
         }
 
-        val modeText = if (mode == TimerMode.BREAK.name) "Take a break" else "Focus!"
+        val modeText = if (currentMode == TimerMode.BREAK.name) "Take a break" else "Focus!"
         remoteViews.setTextViewText(R.id.tv_mode, modeText)
 
-        val progress = if (totalTime > 0) (totalTime - timeLeft) * 100 / totalTime else 0
+        val progress = if (blockTotalSeconds > 0) secondsInBlock * 100 / blockTotalSeconds else 0
         remoteViews.setProgressBar(R.id.progress_bar, 100, progress, false)
 
         val toggleIcon = if (isPaused) R.drawable.ic_play else R.drawable.ic_pause

@@ -1,27 +1,24 @@
 package presentation.screen.home.viewModel
 
-import domain.useCase.StartLiveTimerNotificationParams
-import domain.useCase.UpdateLiveTimerNotificationParams
+import domain.model.Timer
+import domain.model.TimerBlock
+import domain.model.TimerMode
 import domain.util.UseCase
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import platform.model.TimerMode
-import platform.model.TimerToggleState
 import presentation.screen.home.HomeScreenAction
 import presentation.screen.home.HomeScreenState
 import presentation.util.CoreViewModel
 import util.Logger
-import kotlin.jvm.JvmName
 
 class HomeScreenViewModel(
-    private val startLiveTimerNotificationUseCase: UseCase<StartLiveTimerNotificationParams, Unit>,
-    private val updateLiveTimerNotificationUseCase: UseCase<UpdateLiveTimerNotificationParams, Unit>,
-    private val stopLiveTimerNotificationUseCase: UseCase<Unit, Unit>,
-    private val emitTimerToggleStateUseCase: UseCase<Unit, Flow<TimerToggleState>>,
+    private val startTimerUseCase: UseCase<Timer, Unit>,
+    private val stopTimerUseCase: UseCase<Unit, Unit>,
+    private val pauseTimerUseCase: UseCase<Unit, Unit>,
+    private val resumeTimerUseCase: UseCase<Unit, Unit>,
+    private val emitTimerFlowUseCase: UseCase<Unit, Flow<Timer?>>,
     scope: CoroutineScope? = null,
     logger: Logger? = null,
 ) : CoreViewModel<HomeScreenState, HomeScreenAction>(
@@ -29,22 +26,29 @@ class HomeScreenViewModel(
     scope = scope,
     logger = logger,
 ) {
-    private companion object {
-        const val FOCUS_DURATION_SECONDS = 40
-        const val BREAK_DURATION_SECONDS = 20
-    }
-
-    private var timerJob: Job? = null
-    private var currentMode: TimerMode = TimerMode.FOCUS
-    private var timeLeftSeconds: Int = FOCUS_DURATION_SECONDS
+    private val timerSequence = listOf(
+        TimerBlock(mode = TimerMode.FOCUS, seconds = 30),
+        TimerBlock(mode = TimerMode.BREAK, seconds = 30),
+        TimerBlock(mode = TimerMode.FOCUS, seconds = 70),
+    )
 
     init {
         vmScope.launch {
-            emitTimerToggleStateUseCase.call(Unit).onSuccess { toggleFlow ->
-                toggleFlow.collect { toggleState ->
-                    when (toggleState) {
-                        TimerToggleState.PAUSE_REQUESTED -> pauseLocal()
-                        TimerToggleState.RESUME_REQUESTED -> resumeLocal()
+            emitTimerFlowUseCase.call(Unit).onSuccess { flow ->
+                flow.collect { timer ->
+                    stateFlow.update {
+                        if (timer == null) {
+                            HomeScreenState()
+                        } else {
+                            val remaining = timer.totalTime - timer.secondsElapsed
+                            val m = remaining / 60
+                            val s = remaining % 60
+                            HomeScreenState(
+                                timerText = "$m:$s",
+                                isRunning = true,
+                                isPaused = timer.isPaused,
+                            )
+                        }
                     }
                 }
             }
@@ -60,125 +64,25 @@ class HomeScreenViewModel(
     }
 
     private fun showNotification() {
-        if (stateFlow.value.isRunning) return
-
-        currentMode = TimerMode.FOCUS
-        timeLeftSeconds = FOCUS_DURATION_SECONDS
-
-        stateFlow.update {
-            it.copy(
-                isRunning = true,
-                isPaused = false,
-                timerText = formatTime(timeLeftSeconds),
-            )
-        }
-
-        vmScope.launch {
-            startLiveTimerNotificationUseCase.call(
-                StartLiveTimerNotificationParams(
-                    mode = currentMode,
-                    timeLeftSeconds = timeLeftSeconds,
-                    totalTimeSeconds = FOCUS_DURATION_SECONDS,
-                    isPaused = false,
-                )
-            )
-        }
-
-        startCountdown()
+        val timer = Timer(
+            sequence = timerSequence,
+            secondsElapsed = 0,
+            isPaused = false,
+        )
+        vmScope.launch { startTimerUseCase.call(timer) }
     }
 
     private fun dismissNotification() {
-        timerJob?.cancel()
-        timerJob = null
-
-        vmScope.launch {
-            stopLiveTimerNotificationUseCase.call(Unit)
-        }
-
-        stateFlow.update {
-            HomeScreenState()
-        }
+        vmScope.launch { stopTimerUseCase.call(Unit) }
     }
 
     private fun togglePausePlay() {
-        if (!stateFlow.value.isRunning) return
-
-        if (stateFlow.value.isPaused) {
-            resumeLocal()
-        } else {
-            pauseLocal()
-        }
-    }
-
-    private fun pauseLocal() {
-        if (!stateFlow.value.isRunning || stateFlow.value.isPaused) return
-
-        timerJob?.cancel()
-        stateFlow.update { it.copy(isPaused = true) }
-
         vmScope.launch {
-            updateLiveTimerNotificationUseCase.call(
-                UpdateLiveTimerNotificationParams(isPaused = true)
-            )
-        }
-    }
-
-    private fun resumeLocal() {
-        if (!stateFlow.value.isRunning || !stateFlow.value.isPaused) return
-
-        stateFlow.update { it.copy(isPaused = false) }
-
-        vmScope.launch {
-            updateLiveTimerNotificationUseCase.call(
-                UpdateLiveTimerNotificationParams(
-                    timeLeftSeconds = timeLeftSeconds,
-                    isPaused = false,
-                )
-            )
-        }
-
-        startCountdown()
-    }
-
-    private fun startCountdown() {
-        timerJob?.cancel()
-        timerJob = vmScope.launch {
-            while (timeLeftSeconds > 0) {
-                delay(1000)
-                timeLeftSeconds--
-                stateFlow.update {
-                    it.copy(timerText = formatTime(timeLeftSeconds))
-                }
+            if (stateFlow.value.isPaused) {
+                resumeTimerUseCase.call(Unit)
+            } else {
+                pauseTimerUseCase.call(Unit)
             }
-            switchMode()
         }
-    }
-
-    private fun switchMode() {
-        currentMode = if (currentMode == TimerMode.FOCUS) TimerMode.BREAK else TimerMode.FOCUS
-        val newTotalTime = if (currentMode == TimerMode.FOCUS) FOCUS_DURATION_SECONDS else BREAK_DURATION_SECONDS
-        timeLeftSeconds = newTotalTime
-
-        stateFlow.update {
-            it.copy(timerText = formatTime(timeLeftSeconds))
-        }
-
-        vmScope.launch {
-            updateLiveTimerNotificationUseCase.call(
-                UpdateLiveTimerNotificationParams(
-                    mode = currentMode,
-                    timeLeftSeconds = timeLeftSeconds,
-                    totalTimeSeconds = newTotalTime,
-                )
-            )
-        }
-
-        startCountdown()
-    }
-
-    private fun formatTime(seconds: Int): String {
-        val m = seconds / 60
-        val s = seconds % 60
-        return ("$m:$s")
     }
 }

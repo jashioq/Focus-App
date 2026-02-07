@@ -1,7 +1,7 @@
 package di
 
 import data.repository.DataStoreRepository
-import data.repository.LiveTimerNotificationRepository
+import data.repository.TimerRepository
 import org.koin.dsl.module
 
 val dataModule = module {
@@ -17,8 +17,8 @@ val dataModule = module {
         )
     }
 
-    single<domain.repository.LiveTimerNotificationRepository> {
-        LiveTimerNotificationRepository(
+    single<domain.repository.TimerRepository> {
+        TimerRepository(
             liveTimerNotification = get(),
         )
     }

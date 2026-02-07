@@ -2,11 +2,12 @@ package di
 
 import domain.useCase.EmitAppFocusStateUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
-import domain.useCase.EmitTimerToggleStateUseCase
+import domain.useCase.EmitTimerFlowUseCase
+import domain.useCase.PauseTimerUseCase
+import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
-import domain.useCase.StartLiveTimerNotificationUseCase
-import domain.useCase.StopLiveTimerNotificationUseCase
-import domain.useCase.UpdateLiveTimerNotificationUseCase
+import domain.useCase.StartTimerUseCase
+import domain.useCase.StopTimerUseCase
 import org.koin.dsl.module
 
 val domainModule = module {
@@ -29,26 +30,32 @@ val domainModule = module {
     }
 
     factory {
-        StartLiveTimerNotificationUseCase(
-            liveTimerNotificationRepository = get(),
+        StartTimerUseCase(
+            timerRepository = get(),
         )
     }
 
     factory {
-        UpdateLiveTimerNotificationUseCase(
-            liveTimerNotificationRepository = get(),
+        StopTimerUseCase(
+            timerRepository = get(),
         )
     }
 
     factory {
-        StopLiveTimerNotificationUseCase(
-            liveTimerNotificationRepository = get(),
+        PauseTimerUseCase(
+            timerRepository = get(),
         )
     }
 
     factory {
-        EmitTimerToggleStateUseCase(
-            liveTimerNotificationRepository = get(),
+        ResumeTimerUseCase(
+            timerRepository = get(),
+        )
+    }
+
+    factory {
+        EmitTimerFlowUseCase(
+            timerRepository = get(),
         )
     }
 }
