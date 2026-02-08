@@ -33,7 +33,10 @@ struct ToggleTimerIntent: LiveActivityIntent {
                     pauseDate: currentState.pauseDate,
                     needsSync: true
                 )
-                await activity.update(ActivityContent(state: syncState, staleDate: nil))
+                await activity.update(
+                    ActivityContent(state: syncState, staleDate: nil),
+                    alertConfiguration: .init(title: "Tap to sync", body: "", sound: .default)
+                )
             }
         }
 

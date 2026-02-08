@@ -44,7 +44,7 @@ struct FocusLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     timerView(state: context.state)
-                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                        .font(.system(size: 24, weight: .bold, design: .monospaced))
                 }
 
                 DynamicIslandExpandedRegion(.trailing) {
@@ -73,30 +73,27 @@ struct FocusLiveActivity: Widget {
                     .fontWeight(.semibold)
 
             } compactTrailing: {
-                if !context.state.needsSync {
-                    Image(systemName: context.state.isPaused ? "play.fill" : "pause.fill")
-                        .font(.caption)
-                        .foregroundColor(.white)
-                }
-
+                EmptyView()
             } minimal: {
                 timerView(state: context.state)
-                    .font(.system(.caption2, design: .monospaced))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
             }
         }
     }
 
     @ViewBuilder
     private func timerView(state: FocusActivityAttributes.ContentState) -> some View {
-        if state.isPaused, let pauseDate = state.pauseDate {
+        if state.needsSync {
+            Text("--:--")
+        } else if state.isPaused, let pauseDate = state.pauseDate {
             let remaining = Int(state.endDate.timeIntervalSince(pauseDate))
             let m = max(remaining, 0) / 60
             let s = max(remaining, 0) % 60
-            Text(String(format: "%02d:%02d", m, s))
+            Text("\(m):\(s)")
         } else if Date() < state.endDate {
             Text(timerInterval: Date()...state.endDate, countsDown: true, showsHours: false)
         } else {
-            Text("00:00")
+            Text("Done")
         }
     }
 
