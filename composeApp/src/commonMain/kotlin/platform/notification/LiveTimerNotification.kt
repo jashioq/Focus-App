@@ -4,12 +4,9 @@ import domain.model.Timer
 import kotlinx.coroutines.flow.Flow
 
 expect class LiveTimerNotification {
-    val timerUpdateFlow: Flow<Timer>
+    val timerToggleFlow: Flow<Unit>
     val notificationDismissedFlow: Flow<Unit>
-
     fun isNotificationActive(): Boolean
-    fun start(timer: Timer)
-    fun stop()
-    fun pause()
-    fun resume()
+    fun set(timer: Timer)
+    fun clear()
 }

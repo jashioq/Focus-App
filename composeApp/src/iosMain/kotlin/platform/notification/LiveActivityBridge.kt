@@ -4,23 +4,29 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 
-private var onStartOrUpdateCallback: ((String, String, Int, Boolean) -> Unit)? = null
+private var onStartOrUpdateCallback: ((Int, Int, Boolean) -> Unit)? = null
 private var onStopCallback: (() -> Unit)? = null
 private var onIsActiveCallback: (() -> Boolean)? = null
-private var onScheduleRefreshCallback: ((Int) -> Unit)? = null
+private var onGetActivityStateCallback: (() -> Pair<Boolean, Int>?)? = null
 
 private val dismissedChannel = Channel<Unit>(Channel.BUFFERED)
+private val toggleChannel = Channel<Unit>(Channel.BUFFERED)
 
 fun registerLiveActivityCallbacks(
-    onStartOrUpdate: (String, String, Int, Boolean) -> Unit,
+    onStartOrUpdate: (Int, Int, Boolean) -> Unit,
     onStop: () -> Unit,
     onIsActive: () -> Boolean,
-    onScheduleRefresh: (Int) -> Unit,
+    onGetActivityState: () -> Pair<Boolean, Int>?,
+    onToggle: (() -> Unit) -> Unit,
 ) {
     onStartOrUpdateCallback = onStartOrUpdate
     onStopCallback = onStop
     onIsActiveCallback = onIsActive
-    onScheduleRefreshCallback = onScheduleRefresh
+    onGetActivityStateCallback = onGetActivityState
+
+    onToggle {
+        toggleChannel.trySend(Unit)
+    }
 }
 
 fun notifyActivityDismissed() {
@@ -28,8 +34,8 @@ fun notifyActivityDismissed() {
 }
 
 internal object LiveActivityBridge {
-    fun startOrUpdate(blockSeconds: String, blockModes: String, secondsElapsed: Int, isPaused: Boolean) {
-        onStartOrUpdateCallback?.invoke(blockSeconds, blockModes, secondsElapsed, isPaused)
+    fun startOrUpdate(totalSeconds: Int, secondsElapsed: Int, isPaused: Boolean) {
+        onStartOrUpdateCallback?.invoke(totalSeconds, secondsElapsed, isPaused)
     }
 
     fun stop() {
@@ -40,9 +46,14 @@ internal object LiveActivityBridge {
         return onIsActiveCallback?.invoke() ?: false
     }
 
-    fun scheduleBackgroundRefresh(afterSeconds: Int) {
-        onScheduleRefreshCallback?.invoke(afterSeconds)
+    fun getActivityState(): Pair<Boolean, Int>? {
+        return onGetActivityStateCallback?.invoke()
+    }
+
+    fun emitToggle() {
+        toggleChannel.trySend(Unit)
     }
 
     val dismissedFlow: Flow<Unit> = dismissedChannel.receiveAsFlow()
+    val toggleFlow: Flow<Unit> = toggleChannel.receiveAsFlow()
 }

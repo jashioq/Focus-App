@@ -33,29 +33,25 @@ class TimerRepository(
     init {
         // 1. Restore from DataStore (single source of truth)
         scope.launch {
-            val restored = restoreTimerState()
-            if (restored != null) {
-                _timerFlow.value = restored
-                if (!restored.isPaused) startCountdown()
+            val restored = restoreTimerState() ?: return@launch
+            _timerFlow.value = restored
+            if (!restored.isPaused) startCountdown()
 
-                if (!notificationDismissed) {
-                    if (liveTimerNotification.isNotificationActive()) {
-                        liveTimerNotification.start(restored)
-                    } else {
-                        notificationDismissed = true
-                        saveTimerState(restored)
-                    }
+            if (!notificationDismissed) {
+                if (liveTimerNotification.isNotificationActive()) {
+                    liveTimerNotification.set(restored)
+                } else {
+                    notificationDismissed = true
+                    saveTimerState(restored)
                 }
             }
         }
 
-        // 2. Android notification button presses
+        // 2. Notification/activity toggle button pressed
         scope.launch {
-            liveTimerNotification.timerUpdateFlow.collect { timer ->
-                _timerFlow.value = timer
-                countdownJob?.cancel()
-                if (!timer.isPaused) startCountdown()
-                saveTimerState(timer)
+            liveTimerNotification.timerToggleFlow.collect {
+                val current = _timerFlow.value ?: return@collect
+                if (current.isPaused) resume() else pause()
             }
         }
 
@@ -72,7 +68,7 @@ class TimerRepository(
     override fun start(timer: Timer) {
         notificationDismissed = false
         _timerFlow.value = timer
-        liveTimerNotification.start(timer)
+        liveTimerNotification.set(timer)
         countdownJob?.cancel()
         if (!timer.isPaused) {
             startCountdown()
@@ -83,7 +79,7 @@ class TimerRepository(
     override fun stop() {
         countdownJob?.cancel()
         _timerFlow.value = null
-        liveTimerNotification.stop()
+        liveTimerNotification.clear()
         scope.launch { clearTimerState() }
     }
 
@@ -96,7 +92,7 @@ class TimerRepository(
             isPaused = true,
         )
         _timerFlow.value = pausedTimer
-        liveTimerNotification.pause()
+        if (!notificationDismissed) liveTimerNotification.set(pausedTimer)
         scope.launch { saveTimerState(pausedTimer) }
     }
 
@@ -108,9 +104,7 @@ class TimerRepository(
             isPaused = false,
         )
         _timerFlow.value = resumedTimer
-        if (!notificationDismissed) {
-            liveTimerNotification.resume()
-        }
+        if (!notificationDismissed) liveTimerNotification.set(resumedTimer)
         startCountdown()
         scope.launch { saveTimerState(resumedTimer) }
     }

@@ -48,9 +48,5 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.jan.focus.blockTransition</string>
-	</array>
 </dict>
 </plist>

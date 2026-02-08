@@ -17,6 +17,8 @@
 		2B309F2C2F3675C000158A4C /* FocusActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B309F292F3675C000158A4C /* FocusActivityAttributes.swift */; };
 		2B309F352F36950000158A4C /* LiveActivityBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B309F332F36950000158A4C /* LiveActivityBridge.swift */; };
 		2B309F362F36950000158A4C /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B309F342F36950000158A4C /* LiveActivityManager.swift */; };
+		2B309F3A2F38000000158A4C /* ToggleTimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B309F392F38000000158A4C /* ToggleTimerIntent.swift */; };
+		2B309F3B2F38000000158A4C /* ToggleTimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B309F392F38000000158A4C /* ToggleTimerIntent.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +56,9 @@
 		2B309F292F3675C000158A4C /* FocusActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusActivityAttributes.swift; sourceTree = "<group>"; };
 		2B309F332F36950000158A4C /* LiveActivityBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityBridge.swift; sourceTree = "<group>"; };
 		2B309F342F36950000158A4C /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		2B309F392F38000000158A4C /* ToggleTimerIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleTimerIntent.swift; sourceTree = "<group>"; };
+		2B68A9F12F38E84400B78BCC /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
+		2B68A9F22F38E85D00B78BCC /* FocusWidgetExtensionExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusWidgetExtensionExtension.entitlements; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -106,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				2B309F292F3675C000158A4C /* FocusActivityAttributes.swift */,
+				2B309F392F38000000158A4C /* ToggleTimerIntent.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -122,6 +128,7 @@
 		7555FF72242A565900829871 = {
 			isa = PBXGroup;
 			children = (
+				2B68A9F22F38E85D00B78BCC /* FocusWidgetExtensionExtension.entitlements */,
 				AB1DB47929225F7C00F7AF9C /* Configuration */,
 				7555FF7D242A565900829871 /* iosApp */,
 				2B309F132F36758C00158A4C /* FocusWidgetExtension */,
@@ -143,6 +150,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				2B68A9F12F38E84400B78BCC /* iosApp.entitlements */,
 				2B309F332F36950000158A4C /* LiveActivityBridge.swift */,
 				2B309F342F36950000158A4C /* LiveActivityManager.swift */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
@@ -295,6 +303,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B309F2C2F3675C000158A4C /* FocusActivityAttributes.swift in Sources */,
+				2B309F3B2F38000000158A4C /* ToggleTimerIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +316,7 @@
 				2B309F362F36950000158A4C /* LiveActivityManager.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 				2B309F2B2F3675C000158A4C /* FocusActivityAttributes.swift in Sources */,
+				2B309F3A2F38000000158A4C /* ToggleTimerIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -328,6 +338,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = FocusWidgetExtensionExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -339,7 +350,7 @@
 				INFOPLIST_FILE = FocusWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FocusWidgetExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 orgName. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -367,6 +378,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = FocusWidgetExtensionExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -377,7 +389,7 @@
 				INFOPLIST_FILE = FocusWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FocusWidgetExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 orgName. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -450,7 +462,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -507,7 +519,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -521,6 +533,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
@@ -531,7 +544,7 @@
 					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)\n$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				INFOPLIST_FILE = iosApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -548,6 +561,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
@@ -558,7 +572,7 @@
 					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)\n$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				INFOPLIST_FILE = iosApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

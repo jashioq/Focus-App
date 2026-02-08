@@ -1,10 +1,11 @@
 import ActivityKit
-import BackgroundTasks
 import ComposeApp
 import Foundation
 
 @objc public class LiveActivityManager: NSObject {
     @objc public static let shared = LiveActivityManager()
+
+    private var toggleCallback: (() -> Void)?
 
     private override init() {
         super.init()
@@ -20,41 +21,21 @@ import Foundation
         return currentActivity != nil
     }
 
-    func startOrUpdateActivity(blockSeconds: String, blockModes: String, secondsElapsed: Int, isPaused: Bool) {
+    func startOrUpdateActivity(totalSeconds: Int, secondsElapsed: Int, isPaused: Bool) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
 
-        let blockSecArr = blockSeconds.split(separator: ",").compactMap { Int($0) }
-        let totalTime = blockSecArr.reduce(0, +)
-
-        // Find current block and remaining seconds in it
-        var cumulative = 0
-        var blockRemaining = 0
-        for blockDuration in blockSecArr {
-            cumulative += blockDuration
-            if secondsElapsed < cumulative {
-                let secondsInBlock = secondsElapsed - (cumulative - blockDuration)
-                blockRemaining = blockDuration - secondsInBlock
-                break
-            }
-        }
-        if blockRemaining <= 0 {
-            blockRemaining = totalTime - secondsElapsed
-        }
-
+        let remaining = totalSeconds - secondsElapsed
         let now = Date()
-        let lastUpdated = now.timeIntervalSince1970
-        let endDate = now.addingTimeInterval(TimeInterval(blockRemaining))
+        let endDate = now.addingTimeInterval(TimeInterval(remaining))
         let pauseDate: Date? = isPaused ? now : nil
         let staleDate: Date? = isPaused ? nil : endDate
 
         let state = FocusActivityAttributes.ContentState(
             endDate: endDate,
+            totalSeconds: totalSeconds,
             isPaused: isPaused,
             pauseDate: pauseDate,
-            blockSeconds: blockSeconds,
-            blockModes: blockModes,
-            secondsElapsed: secondsElapsed,
-            lastUpdated: lastUpdated
+            needsSync: false
         )
 
         if let existing = currentActivity {
@@ -86,11 +67,54 @@ import Foundation
         }
     }
 
-    func scheduleBlockTransitionRefresh(afterSeconds: Int) {
-        let request = BGAppRefreshTaskRequest(identifier: "com.jan.focus.blockTransition")
-        request.earliestBeginDate = Date().addingTimeInterval(TimeInterval(afterSeconds))
-        try? BGTaskScheduler.shared.submit(request)
+    // MARK: - Activity State (for foreground sync)
+
+    struct ActivityState {
+        let isPaused: Bool
+        let secondsElapsed: Int
     }
+
+    func getActivityState() -> ActivityState? {
+        guard let activity = currentActivity else { return nil }
+        let state = activity.content.state
+        let now = Date()
+
+        let remaining: Int
+        if state.isPaused, let pauseDate = state.pauseDate {
+            remaining = Int(state.endDate.timeIntervalSince(pauseDate))
+        } else {
+            remaining = Int(state.endDate.timeIntervalSince(now))
+        }
+
+        let elapsed = state.totalSeconds - max(remaining, 0)
+        return ActivityState(isPaused: state.isPaused, secondsElapsed: elapsed)
+    }
+
+    // MARK: - Toggle (Darwin notification from widget intent)
+
+    func setToggleCallback(_ callback: @escaping () -> Void) {
+        self.toggleCallback = callback
+    }
+
+    func startListeningForToggle() {
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        CFNotificationCenterAddObserver(
+            center,
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, _, _, _ in
+                guard let observer = observer else { return }
+                let manager = Unmanaged<LiveActivityManager>.fromOpaque(observer).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    manager.toggleCallback?()
+                }
+            },
+            "com.jan.focus.timerToggled" as CFString,
+            nil,
+            .deliverImmediately
+        )
+    }
+
+    // MARK: - Dismissal observation
 
     private func observeDismissal(_ activity: Activity<FocusActivityAttributes>) {
         Task {
