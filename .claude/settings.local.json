@@ -9,7 +9,9 @@
       "Bash(./gradlew compileDebugKotlinAndroid:*)",
       "Bash(./gradlew composeApp:assembleDebug:*)",
       "Bash(./gradlew composeApp:compileKotlinAndroid:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(./gradlew compileKotlinIosArm64:*)"
     ]
   }
 }

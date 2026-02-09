@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import presentation.compose.component.text.Text
+import presentation.compose.component.timerControl.TimerControl
 
 @Composable
 fun HomeScreenView(
@@ -69,5 +70,14 @@ fun HomeScreenView(
                 androidx.compose.material3.Text("Dismiss")
             }
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        TimerControl(
+            isRunning = isRunning && !isPaused,
+            onPlay = onTogglePausePlay,
+            onPause = onTogglePausePlay,
+            onStop = onDismissNotification,
+        )
     }
 }
