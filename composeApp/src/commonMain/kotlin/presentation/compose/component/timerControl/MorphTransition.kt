@@ -2,6 +2,7 @@ package presentation.compose.component.timerControl
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -44,7 +46,7 @@ fun <T> MorphTransition(
                     targetScale = morphScale,
                     animationSpec = tween(durationMs),
                 ),
-            )
+            ).using(SizeTransform(clip = false))
         },
         label = label,
     ) { state ->
@@ -59,7 +61,7 @@ fun <T> MorphTransition(
         }
 
         Box(
-            modifier = Modifier.blur(blur.dp),
+            modifier = Modifier.blur(blur.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded),
             contentAlignment = Alignment.Center,
         ) {
             content(state)

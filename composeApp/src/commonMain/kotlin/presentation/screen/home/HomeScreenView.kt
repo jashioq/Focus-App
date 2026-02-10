@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import presentation.compose.component.text.Text
+import presentation.compose.component.text.TimerText
 import presentation.compose.component.timerControl.TimerControl
 
 @Composable
@@ -39,8 +39,9 @@ fun HomeScreenView(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
+        TimerText(
             text = timerText,
+            isPaused = isPaused,
             fontSize = 48.sp,
             lineHeight = 56.sp,
             fontWeight = FontWeight.Bold,

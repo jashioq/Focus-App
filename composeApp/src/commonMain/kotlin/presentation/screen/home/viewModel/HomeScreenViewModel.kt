@@ -45,8 +45,9 @@ class HomeScreenViewModel(
                             val remaining = timer.totalTime - timer.secondsElapsed
                             val m = remaining / 60
                             val s = remaining % 60
+                            val timerText = "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
                             HomeScreenState(
-                                timerText = "$m:$s",
+                                timerText = timerText,
                                 isRunning = true,
                                 isPaused = timer.isPaused,
                             )
