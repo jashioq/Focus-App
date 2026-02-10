@@ -1,6 +1,7 @@
 package presentation.compose.component.ring
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -51,14 +53,17 @@ fun FocusTimerRing(
     strokeWidth: Dp = 16.dp,
     trackColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
     progressColor: Color = MaterialTheme.colorScheme.primary,
+    borderColor: Color = MaterialTheme.colorScheme.primary,
+    borderThickness: Dp = 1.5.dp,
 ) {
     val density = LocalDensity.current
     val buttonGapSpacingPx = with(density) { buttonGapSpacing.toPx() }
     val strokeWidthPx = with(density) { strokeWidth.toPx() }
+    val borderThicknessPx = with(density) { borderThickness.toPx() }
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
         label = "ringProgress",
     )
 
@@ -70,8 +75,8 @@ fun FocusTimerRing(
             TimerText(
                 text = timerText,
                 isPaused = isPaused,
-                fontSize = 48.sp,
-                lineHeight = 56.sp,
+                fontSize = 64.sp,
+                lineHeight = 72.sp,
                 fontWeight = FontWeight.Bold,
             )
             // Slot 1: Spring button
@@ -119,6 +124,25 @@ fun FocusTimerRing(
                     style = stroke,
                 )
             }
+
+            // Tilt border — sweep gradient bright at top, fading to sides
+            val borderBrush = Brush.sweepGradient(
+                0.00f to borderColor.copy(alpha = 0.1f),
+                0.25f to borderColor.copy(alpha = 0.1f),
+                0.50f to borderColor.copy(alpha = 0.1f),
+                0.75f to borderColor.copy(alpha = 1f),
+                1.00f to borderColor.copy(alpha = 0.1f),
+                center = center,
+            )
+            drawArc(
+                brush = borderBrush,
+                startAngle = startAngle,
+                sweepAngle = arcSpan,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = borderThicknessPx, cap = StrokeCap.Round),
+            )
         },
         measurePolicy = remember(buttonGapSpacingPx, strokeWidthPx) {
             RingMeasurePolicy(ring, buttonGapSpacingPx, strokeWidthPx)

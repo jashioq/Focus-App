@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -32,8 +33,9 @@ fun HomeScreenView(
             .displayCutoutPadding()
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween,
     ) {
+        Spacer(modifier = Modifier.height(32.dp))
+
         FocusTimerRing(
             progress = progress,
             isPaused = isPaused,
@@ -41,6 +43,8 @@ fun HomeScreenView(
             springButtonText = "Focus",
             onSpringButtonClick = onShowNotification,
         )
+
+        Spacer(modifier = Modifier.weight(1f))
 
         TimerControl(
             isRunning = isRunning && !isPaused,
