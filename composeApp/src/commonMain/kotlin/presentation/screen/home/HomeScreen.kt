@@ -16,6 +16,7 @@ fun HomeScreen(
         timerText = state.timerText,
         isRunning = state.isRunning,
         isPaused = state.isPaused,
+        progress = state.progress,
         onShowNotification = {
             homeScreenViewModel.sendAction(HomeScreenAction.ShowNotification)
         },

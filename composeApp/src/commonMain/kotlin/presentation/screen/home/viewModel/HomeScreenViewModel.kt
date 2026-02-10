@@ -46,10 +46,16 @@ class HomeScreenViewModel(
                             val m = remaining / 60
                             val s = remaining % 60
                             val timerText = "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
+                            val progress = if (timer.totalTime > 0) {
+                                (timer.secondsElapsed.toFloat() / timer.totalTime.toFloat()).coerceIn(0f, 1f)
+                            } else {
+                                0f
+                            }
                             HomeScreenState(
                                 timerText = timerText,
                                 isRunning = true,
                                 isPaused = timer.isPaused,
+                                progress = progress,
                             )
                         }
                     }
