@@ -1,25 +1,14 @@
 package presentation.compose.component.timerControl
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,13 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -60,7 +47,6 @@ import focus.composeapp.generated.resources.ic_pause
 import focus.composeapp.generated.resources.ic_play
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
-import util.rememberHapticFeedback
 import util.tiltBorder
 
 // region Configuration
@@ -85,15 +71,6 @@ private const val ShimmerBrightAlpha = 0.8f
 private const val SnapToEndDurationMs = 100
 private const val SnapBackDurationMs = 300
 
-// Icon morph transition
-private const val IconTransitionDurationMs = 600
-private const val IconTransitionScale = 1.5f
-private const val IconTransitionBlurRadius = 40f
-
-// Button scale during drag
-private const val ButtonDragScale = 1.15f
-private const val ButtonScaleDurationMs = 100
-
 // endregion
 
 @Composable
@@ -103,7 +80,6 @@ fun TimerControl(
     onPause: () -> Unit,
     onStop: () -> Unit,
 ) {
-    val haptic = rememberHapticFeedback()
     val density = LocalDensity.current
     val buttonSizePx = with(density) { ButtonSize.toPx() }
     var containerWidthPx by remember { mutableFloatStateOf(0f) }
@@ -131,9 +107,7 @@ fun TimerControl(
         }
     }
 
-    val maxDragPx = (containerWidthPx - buttonSizePx).coerceAtLeast(0f)
     val displayOffset = if (isDragging) dragOffsetPx else releaseAnimatable.value
-    val dragProgress = if (maxDragPx > 0f) (displayOffset / maxDragPx).coerceIn(0f, 1f) else 0f
     val stopThreshold = StopThreshold
 
     val draggableState = rememberDraggableState { delta ->
@@ -273,73 +247,20 @@ fun TimerControl(
         }
 
         // Button — always visible, icon crossfades between pause and play
-        val buttonInteractionSource = remember { MutableInteractionSource() }
-        val isPressed by buttonInteractionSource.collectIsPressedAsState()
-        val isTouching = isPressed || isDragging
-        val buttonScaleAnimatable = remember { Animatable(1f) }
-        LaunchedEffect(isTouching) {
-            if (isTouching) {
-                buttonScaleAnimatable.animateTo(
-                    targetValue = ButtonDragScale,
-                    animationSpec = tween(ButtonScaleDurationMs, easing = FastOutSlowInEasing),
-                )
-                haptic.performHeavyImpact()
-            } else {
-                haptic.performHeavyImpact()
-                buttonScaleAnimatable.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(ButtonScaleDurationMs, easing = FastOutSlowInEasing),
-                )
-            }
-        }
-        val buttonScale = buttonScaleAnimatable.value
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(displayOffset.roundToInt(), 0) }
-                .graphicsLayer {
-                    scaleX = buttonScale
-                    scaleY = buttonScale
-                }
-                .size(ButtonSize)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .clickable(
-                    indication = null,
-                    interactionSource = buttonInteractionSource,
-                ) { if (isRunning) onPause() else onPlay() },
-            contentAlignment = Alignment.Center,
-        ) {
-            AnimatedContent(
-                targetState = isRunning,
-                transitionSpec = {
-                    (fadeIn(tween(IconTransitionDurationMs)) + scaleIn(
-                        initialScale = IconTransitionScale,
-                        animationSpec = tween(IconTransitionDurationMs),
-                    )).togetherWith(
-                        fadeOut(tween(IconTransitionDurationMs)) + scaleOut(
-                            targetScale = IconTransitionScale,
-                            animationSpec = tween(IconTransitionDurationMs),
-                        ),
-                    )
-                },
-                label = "iconTransition",
-            ) { targetRunning ->
-                val blurRadius by transition.animateFloat(
-                    transitionSpec = { tween(IconTransitionDurationMs) },
-                    label = "iconBlur",
-                ) { state ->
-                    when (state) {
-                        EnterExitState.Visible -> 0f
-                        else -> IconTransitionBlurRadius
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(ButtonSize)
-                        .blur(blurRadius.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
+        Box(modifier = Modifier.offset { IntOffset(displayOffset.roundToInt(), 0) }) {
+            ScaleOnTouchButton(
+                onClick = { if (isRunning) onPause() else onPlay() },
+                isExternallyPressed = isDragging,
+                modifier = Modifier
+                    .size(ButtonSize)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+            ) {
+                MorphTransition(
+                    targetState = isRunning,
+                    modifier = Modifier.size(ButtonSize),
+                    label = "iconTransition",
+                ) { targetRunning: Boolean ->
                     Icon(
                         painter = painterResource(
                             if (targetRunning) Res.drawable.ic_pause else Res.drawable.ic_play,
