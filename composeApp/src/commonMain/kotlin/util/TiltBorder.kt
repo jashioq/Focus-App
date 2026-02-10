@@ -18,6 +18,8 @@ fun Modifier.tiltBorder(
     color: Color,
     thickness: Dp = 2.dp,
     visibilityBound: Float = 0.15f,
+    minimumAlpha: Float = 0f,
+    upperAlpha: Float = 1f,
     shape: Shape = RoundedCornerShape(50),
 ): Modifier = this.drawWithContent {
     drawContent()
@@ -29,12 +31,13 @@ fun Modifier.tiltBorder(
     // Bright spot at top = 270° in sweep coords = 0.75 normalized shift.
     val shift = 0.75f
 
-    // Opacity pattern: front=1, +90°=0, back=visibilityBound, -90°=0
+    // Opacity pattern: front=upperAlpha, +90°=0, back=visibilityBound, -90°=0
+    // Each stop is clamped to at least minimumAlpha.
     val shiftedStops = listOf(
-        (0.00f + shift) % 1f to color.copy(alpha = 1.0f),
-        (0.25f + shift) % 1f to color.copy(alpha = 0.0f),
-        (0.50f + shift) % 1f to color.copy(alpha = visibilityBound),
-        (0.75f + shift) % 1f to color.copy(alpha = 0.0f),
+        (0.00f + shift) % 1f to color.copy(alpha = upperAlpha.coerceAtLeast(minimumAlpha)),
+        (0.25f + shift) % 1f to color.copy(alpha = 0.0f.coerceAtLeast(minimumAlpha)),
+        (0.50f + shift) % 1f to color.copy(alpha = visibilityBound.coerceAtLeast(minimumAlpha)),
+        (0.75f + shift) % 1f to color.copy(alpha = 0.0f.coerceAtLeast(minimumAlpha)),
     ).sortedBy { it.first }
 
     val gradientStops = buildSweepGradientStops(shiftedStops)

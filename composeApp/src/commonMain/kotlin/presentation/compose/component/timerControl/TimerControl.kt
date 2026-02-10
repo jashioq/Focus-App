@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -201,7 +202,7 @@ fun TimerControl(
                     shape = RoundedCornerShape(50),
                 )
                 .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surfaceContainer),
+                .background(Color.White.copy(alpha = 0.09f)),
         ) {
             if (containerWidthPx > 0f) {
                 val textColor = MaterialTheme.colorScheme.primary

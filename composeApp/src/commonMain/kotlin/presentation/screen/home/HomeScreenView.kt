@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import presentation.compose.component.button.SpringButton
 import presentation.compose.component.text.TimerText
 import presentation.compose.component.timerControl.TimerControl
 
@@ -70,6 +73,19 @@ fun HomeScreenView(
             ) {
                 androidx.compose.material3.Text("Dismiss")
             }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        SpringButton(
+            onClick = onShowNotification,
+        ) {
+            Text(
+                text = "Focus",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
