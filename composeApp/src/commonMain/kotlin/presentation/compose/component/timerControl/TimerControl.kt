@@ -5,11 +5,8 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,6 +19,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,9 +41,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.onSizeChanged
@@ -60,6 +60,8 @@ import focus.composeapp.generated.resources.ic_pause
 import focus.composeapp.generated.resources.ic_play
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
+import util.rememberHapticFeedback
+import util.tiltBorder
 
 // region Configuration
 
@@ -88,6 +90,10 @@ private const val IconTransitionDurationMs = 600
 private const val IconTransitionScale = 1.5f
 private const val IconTransitionBlurRadius = 40f
 
+// Button scale during drag
+private const val ButtonDragScale = 1.15f
+private const val ButtonScaleDurationMs = 100
+
 // endregion
 
 @Composable
@@ -97,6 +103,7 @@ fun TimerControl(
     onPause: () -> Unit,
     onStop: () -> Unit,
 ) {
+    val haptic = rememberHapticFeedback()
     val density = LocalDensity.current
     val buttonSizePx = with(density) { ButtonSize.toPx() }
     var containerWidthPx by remember { mutableFloatStateOf(0f) }
@@ -133,19 +140,26 @@ fun TimerControl(
         if (!isDragValid) return@rememberDraggableState
         val maxDrag = (containerWidthPx - buttonSizePx).coerceAtLeast(0f)
         dragOffsetPx = (dragOffsetPx + delta).coerceIn(0f, maxDrag)
+        if (maxDrag > 0f && dragOffsetPx >= maxDrag) {
+            onStop()
+        }
     }
 
-    // Shimmer animation
-    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = ShimmerDurationMs, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "shimmerProgress",
-    )
+    // Shimmer animation — restarts from the beginning each time the track is revealed
+    val shimmerAnimatable = remember { Animatable(0f) }
+    LaunchedEffect(isRunning) {
+        if (!isRunning) {
+            shimmerAnimatable.snapTo(0f)
+            while (true) {
+                shimmerAnimatable.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = ShimmerDurationMs, easing = LinearEasing),
+                )
+                shimmerAnimatable.snapTo(0f)
+            }
+        }
+    }
+    val shimmerProgress = shimmerAnimatable.value
 
     // Track width: interpolate between button size and full container width
     val trackWidthPx = if (containerWidthPx > 0f) {
@@ -206,6 +220,12 @@ fun TimerControl(
             modifier = Modifier
                 .width(trackWidthDp)
                 .height(ButtonSize)
+                .tiltBorder(
+                    color = MaterialTheme.colorScheme.primary,
+                    thickness = 1.5.dp,
+                    visibilityBound = 0.5f,
+                    shape = RoundedCornerShape(50),
+                )
                 .clip(RoundedCornerShape(50))
                 .background(MaterialTheme.colorScheme.surfaceContainer),
         ) {
@@ -226,16 +246,22 @@ fun TimerControl(
 
                 // Text sized to full container width — overflows the track and gets clipped,
                 // so it reveals left-to-right as the track grows.
+                // The button "pulls a curtain" over the text: only the portion
+                // to the right of the button is visible.
+                val curtainLeft = displayOffset + buttonSizePx
                 Box(
                     modifier = Modifier
                         .requiredWidth(containerWidthDp)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .drawWithContent {
+                            clipRect(left = curtainLeft) {
+                                this@drawWithContent.drawContent()
+                            }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     androidx.compose.material3.Text(
                         text = "Slide to stop",
-                        modifier = Modifier
-                            .alpha(widthFraction * (1f - dragProgress)),
                         style = TextStyle(
                             brush = shimmerBrush,
                             fontSize = TextFontSize,
@@ -247,15 +273,39 @@ fun TimerControl(
         }
 
         // Button — always visible, icon crossfades between pause and play
+        val buttonInteractionSource = remember { MutableInteractionSource() }
+        val isPressed by buttonInteractionSource.collectIsPressedAsState()
+        val isTouching = isPressed || isDragging
+        val buttonScaleAnimatable = remember { Animatable(1f) }
+        LaunchedEffect(isTouching) {
+            if (isTouching) {
+                buttonScaleAnimatable.animateTo(
+                    targetValue = ButtonDragScale,
+                    animationSpec = tween(ButtonScaleDurationMs, easing = FastOutSlowInEasing),
+                )
+                haptic.performHeavyImpact()
+            } else {
+                haptic.performHeavyImpact()
+                buttonScaleAnimatable.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(ButtonScaleDurationMs, easing = FastOutSlowInEasing),
+                )
+            }
+        }
+        val buttonScale = buttonScaleAnimatable.value
         Box(
             modifier = Modifier
                 .offset { IntOffset(displayOffset.roundToInt(), 0) }
+                .graphicsLayer {
+                    scaleX = buttonScale
+                    scaleY = buttonScale
+                }
                 .size(ButtonSize)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .clickable(
                     indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
+                    interactionSource = buttonInteractionSource,
                 ) { if (isRunning) onPause() else onPlay() },
             contentAlignment = Alignment.Center,
         ) {
