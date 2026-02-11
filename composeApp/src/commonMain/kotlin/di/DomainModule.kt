@@ -7,6 +7,7 @@ import domain.useCase.PauseTimerUseCase
 import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
 import domain.useCase.StartTimerUseCase
+import domain.useCase.SkipBlockUseCase
 import domain.useCase.StopTimerUseCase
 import org.koin.dsl.module
 
@@ -55,6 +56,12 @@ val domainModule = module {
 
     factory {
         EmitTimerFlowUseCase(
+            timerRepository = get(),
+        )
+    }
+
+    factory {
+        SkipBlockUseCase(
             timerRepository = get(),
         )
     }

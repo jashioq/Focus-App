@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import presentation.compose.component.button.SpringButton
 import presentation.compose.component.text.TimerText
+import presentation.compose.component.timerControl.MorphTransition
 import kotlin.math.asin
 import kotlin.math.min
 
@@ -83,12 +84,17 @@ fun FocusTimerRing(
             SpringButton(
                 onClick = onSpringButtonClick,
             ) {
-                Text(
-                    text = springButtonText,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
-                )
+                MorphTransition(
+                    targetState = springButtonText,
+                    label = "springButtonTextMorph",
+                ) { text: String ->
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+                    )
+                }
             }
         },
         modifier = modifier.drawBehind {

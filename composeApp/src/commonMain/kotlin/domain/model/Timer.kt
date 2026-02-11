@@ -9,19 +9,14 @@ class Timer(
         this.sequence.sumOf { it.seconds }
 
     fun getCurrentBlock(): Pair<TimerBlock, Int>? {
-        var totalSeconds = sequence.first().seconds
-        var previousTotalSeconds = 0
-
-        this.sequence.forEachIndexed { index, block ->
-            if (this.secondsElapsed < totalSeconds) {
-                val secondsInBlock = this.secondsElapsed - previousTotalSeconds
-                return Pair(block, secondsInBlock)
+        var accumulatedSeconds = 0
+        for (block in sequence) {
+            val blockStart = accumulatedSeconds
+            accumulatedSeconds += block.seconds
+            if (secondsElapsed < accumulatedSeconds) {
+                return Pair(block, secondsElapsed - blockStart)
             }
-
-            previousTotalSeconds = totalSeconds
-            totalSeconds += block.seconds
         }
-
         return null
     }
 }

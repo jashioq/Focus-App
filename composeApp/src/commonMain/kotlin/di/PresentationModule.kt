@@ -6,6 +6,7 @@ import domain.useCase.PauseTimerUseCase
 import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
 import domain.useCase.StartTimerUseCase
+import domain.useCase.SkipBlockUseCase
 import domain.useCase.StopTimerUseCase
 import navigation.viewModel.NavigationViewModel
 import org.koin.dsl.module
@@ -32,6 +33,7 @@ val presentationModule = module {
             pauseTimerUseCase = get<PauseTimerUseCase>(),
             resumeTimerUseCase = get<ResumeTimerUseCase>(),
             emitTimerFlowUseCase = get<EmitTimerFlowUseCase>(),
+            skipBlockUseCase = get<SkipBlockUseCase>(),
         )
     }
 }

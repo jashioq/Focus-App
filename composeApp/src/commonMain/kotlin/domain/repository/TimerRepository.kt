@@ -9,4 +9,5 @@ interface TimerRepository {
     fun stop()
     fun pause()
     fun resume()
+    fun skipBlock()
 }

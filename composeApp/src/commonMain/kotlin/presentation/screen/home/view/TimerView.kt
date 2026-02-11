@@ -17,8 +17,10 @@ fun TimerView(
     timerText: String,
     isPaused: Boolean,
     progress: Float,
+    blockLabel: String,
     onDismissNotification: () -> Unit,
     onTogglePausePlay: () -> Unit,
+    onSkipBlock: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -33,8 +35,8 @@ fun TimerView(
             progress = progress,
             isPaused = isPaused,
             timerText = timerText,
-            springButtonText = "Focus",
-            onSpringButtonClick = {},
+            springButtonText = blockLabel,
+            onSpringButtonClick = onSkipBlock,
         )
 
         Spacer(modifier = Modifier.weight(1f))

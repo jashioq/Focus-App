@@ -5,4 +5,5 @@ data class HomeScreenState(
     val isRunning: Boolean = false,
     val isPaused: Boolean = false,
     val progress: Float = 0f,
+    val blockLabel: String = "Focus",
 )

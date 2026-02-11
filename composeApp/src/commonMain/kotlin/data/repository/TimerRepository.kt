@@ -96,6 +96,29 @@ class TimerRepository(
         scope.launch { saveTimerState(pausedTimer) }
     }
 
+    override fun skipBlock() {
+        val current = _timerFlow.value ?: return
+        var accumulatedSeconds = 0
+        for (block in current.sequence) {
+            accumulatedSeconds += block.seconds
+            if (current.secondsElapsed < accumulatedSeconds) {
+                if (accumulatedSeconds >= current.totalTime) {
+                    stop()
+                } else {
+                    val skippedTimer = Timer(
+                        sequence = current.sequence,
+                        secondsElapsed = accumulatedSeconds,
+                        isPaused = current.isPaused,
+                    )
+                    _timerFlow.value = skippedTimer
+                    if (!notificationDismissed) liveTimerNotification.set(skippedTimer)
+                    scope.launch { saveTimerState(skippedTimer) }
+                }
+                return
+            }
+        }
+    }
+
     override fun resume() {
         val current = _timerFlow.value ?: return
         val resumedTimer = Timer(
