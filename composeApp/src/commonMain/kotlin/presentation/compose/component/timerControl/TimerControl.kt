@@ -76,6 +76,7 @@ private const val SnapBackDurationMs = 300
 
 @Composable
 fun TimerControl(
+    modifier: Modifier = Modifier,
     isRunning: Boolean,
     onPlay: () -> Unit,
     onPause: () -> Unit,
@@ -146,7 +147,7 @@ fun TimerControl(
     val containerWidthDp = with(density) { containerWidthPx.toDp() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(ButtonSize)
             .onSizeChanged { containerWidthPx = it.width.toFloat() }
