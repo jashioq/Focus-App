@@ -43,8 +43,8 @@ data class ScaleKeyframe(
 enum class HapticType { LIGHT, MEDIUM, HEAVY }
 
 data class HapticTick(
-    val delayMs: Long,
-    val type: HapticType = HapticType.LIGHT,
+    val timeMs: Long,
+    val type: HapticType? = null,
 )
 
 private val DefaultPressKeyframes = listOf(
@@ -55,15 +55,18 @@ private val DefaultPressKeyframes = listOf(
 private const val DefaultReleaseDamping = 0.4f
 private const val DefaultReleaseStiffness = Spring.StiffnessMedium
 
-private fun defaultHapticTicks(): List<HapticTick> {
-    val count = 10
-    val maxDelayMs = 300L
-    val minDelayMs = 40L
-    return (0 until count).map { i ->
-        val t = i.toFloat() / (count - 1).coerceAtLeast(1).toFloat()
-        HapticTick(delayMs = maxDelayMs + ((minDelayMs - maxDelayMs) * t).toLong())
-    }
-}
+private fun defaultHapticTicks(): List<HapticTick> =
+    listOf(
+        HapticTick(timeMs = 0, type = HapticType.LIGHT),
+        HapticTick(timeMs = 200, type = HapticType.LIGHT),
+        HapticTick(timeMs = 400, type = HapticType.LIGHT),
+        HapticTick(timeMs = 600, type = HapticType.MEDIUM),
+
+        HapticTick(timeMs = 1500, type = HapticType.LIGHT),
+        HapticTick(timeMs = 1600, type = HapticType.LIGHT),
+        HapticTick(timeMs = 1700, type = HapticType.MEDIUM),
+    )
+
 
 private fun Haptic.perform(type: HapticType) = when (type) {
     HapticType.LIGHT -> performLightImpact()
@@ -105,9 +108,12 @@ fun SpringButton(
         if (isPressed) {
             // Launch haptic ticker alongside animation — delay-based for consistent timing
             val hapticJob = launch {
+                var elapsed = 0L
                 for (tick in hapticTicks) {
-                    delay(tick.delayMs)
-                    haptic.perform(tick.type)
+                    val wait = tick.timeMs - elapsed
+                    if (wait > 0) delay(wait)
+                    elapsed = tick.timeMs
+                    tick.type?.let { haptic.perform(it) }
                 }
             }
 
