@@ -52,7 +52,7 @@ import util.tiltBorder
 
 // region Configuration
 
-private val ButtonSize = 64.dp
+private val ButtonSize = 84.dp
 private val IconSize = 28.dp
 private val TextFontSize = 16.sp
 
@@ -75,7 +75,7 @@ private const val SnapBackDurationMs = 300
 // endregion
 
 @Composable
-fun TimerControl(
+fun PauseControl(
     modifier: Modifier = Modifier,
     isRunning: Boolean,
     onPlay: () -> Unit,

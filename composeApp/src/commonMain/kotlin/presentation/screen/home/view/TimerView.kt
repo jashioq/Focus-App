@@ -10,7 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import presentation.compose.component.ring.FocusTimerRing
-import presentation.compose.component.timerControl.TimerControl
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.sp
+import presentation.compose.component.timerControl.TimerControls
 
 @Composable
 fun TimerView(
@@ -41,12 +44,20 @@ fun TimerView(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        TimerControl(
+        TimerControls(
             modifier = Modifier.padding(16.dp),
             isRunning = !isPaused,
             onPlay = onTogglePausePlay,
             onPause = onTogglePausePlay,
             onStop = onDismissNotification,
+            onAddButtonClick = {},
+            addButtonContent = {
+                Text(
+                    text = "+",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 24.sp,
+                )
+            },
         )
     }
 }
