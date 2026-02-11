@@ -26,10 +26,12 @@ fun HomeScreenView(
     isPaused: Boolean,
     progress: Float,
     blockLabel: String,
+    addButtonText: String,
     onShowNotification: () -> Unit,
     onDismissNotification: () -> Unit,
     onTogglePausePlay: () -> Unit,
     onSkipBlock: () -> Unit,
+    onExtendBlock: () -> Unit,
 ) {
     AnimatedContent(
         targetState = isRunning,
@@ -54,9 +56,11 @@ fun HomeScreenView(
                 isPaused = isPaused,
                 progress = progress,
                 blockLabel = blockLabel,
+                addButtonText = addButtonText,
                 onDismissNotification = onDismissNotification,
                 onTogglePausePlay = onTogglePausePlay,
                 onSkipBlock = onSkipBlock,
+                onExtendBlock = onExtendBlock,
             )
         } else {
             PlanningView(

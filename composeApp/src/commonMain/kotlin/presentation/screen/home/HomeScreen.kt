@@ -18,6 +18,7 @@ fun HomeScreen(
         isPaused = state.isPaused,
         progress = state.progress,
         blockLabel = state.blockLabel,
+        addButtonText = state.addButtonText,
         onShowNotification = {
             homeScreenViewModel.sendAction(HomeScreenAction.ShowNotification)
         },
@@ -29,6 +30,9 @@ fun HomeScreen(
         },
         onSkipBlock = {
             homeScreenViewModel.sendAction(HomeScreenAction.SkipBlock)
+        },
+        onExtendBlock = {
+            homeScreenViewModel.sendAction(HomeScreenAction.ExtendBlock)
         },
     )
 }

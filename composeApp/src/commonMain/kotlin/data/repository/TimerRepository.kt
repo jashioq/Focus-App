@@ -119,6 +119,27 @@ class TimerRepository(
         }
     }
 
+    override fun extendBlock(seconds: Int) {
+        val current = _timerFlow.value ?: return
+        var accumulatedSeconds = 0
+        val newSequence = current.sequence.toMutableList()
+        for ((index, block) in current.sequence.withIndex()) {
+            accumulatedSeconds += block.seconds
+            if (current.secondsElapsed < accumulatedSeconds) {
+                newSequence[index] = block.copy(seconds = block.seconds + seconds)
+                break
+            }
+        }
+        val extendedTimer = Timer(
+            sequence = newSequence,
+            secondsElapsed = current.secondsElapsed,
+            isPaused = current.isPaused,
+        )
+        _timerFlow.value = extendedTimer
+        if (!notificationDismissed) liveTimerNotification.set(extendedTimer)
+        scope.launch { saveTimerState(extendedTimer) }
+    }
+
     override fun resume() {
         val current = _timerFlow.value ?: return
         val resumedTimer = Timer(

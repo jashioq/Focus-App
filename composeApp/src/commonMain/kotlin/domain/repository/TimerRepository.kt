@@ -10,4 +10,5 @@ interface TimerRepository {
     fun pause()
     fun resume()
     fun skipBlock()
+    fun extendBlock(seconds: Int)
 }

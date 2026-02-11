@@ -49,7 +49,6 @@ fun TimerControls(
                 durationMs = AddButtonMorphDurationMs,
                 label = "addButtonTransition",
                 morphScale = 0f,
-//                blurRadius = 0.dp,
             ) { targetRunning ->
                 if (targetRunning) {
                     ScaleOnTouchButton(

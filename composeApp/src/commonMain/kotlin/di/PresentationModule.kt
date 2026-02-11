@@ -6,6 +6,7 @@ import domain.useCase.PauseTimerUseCase
 import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
 import domain.useCase.StartTimerUseCase
+import domain.useCase.ExtendBlockUseCase
 import domain.useCase.SkipBlockUseCase
 import domain.useCase.StopTimerUseCase
 import navigation.viewModel.NavigationViewModel
@@ -34,6 +35,7 @@ val presentationModule = module {
             resumeTimerUseCase = get<ResumeTimerUseCase>(),
             emitTimerFlowUseCase = get<EmitTimerFlowUseCase>(),
             skipBlockUseCase = get<SkipBlockUseCase>(),
+            extendBlockUseCase = get<ExtendBlockUseCase>(),
         )
     }
 }

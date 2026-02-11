@@ -20,6 +20,7 @@ class HomeScreenViewModel(
     private val resumeTimerUseCase: UseCase<Unit, Unit>,
     private val emitTimerFlowUseCase: UseCase<Unit, Flow<Timer?>>,
     private val skipBlockUseCase: UseCase<Unit, Unit>,
+    private val extendBlockUseCase: UseCase<Int, Unit>,
     scope: CoroutineScope? = null,
     logger: Logger? = null,
 ) : CoreViewModel<HomeScreenState, HomeScreenAction>(
@@ -27,6 +28,9 @@ class HomeScreenViewModel(
     scope = scope,
     logger = logger,
 ) {
+    private var extendPressCount = 0
+    private var lastBlockStart = -1
+
     private val timerSequence = listOf(
         TimerBlock(mode = TimerMode.FOCUS, seconds = 150),
         TimerBlock(mode = TimerMode.BREAK, seconds = 100),
@@ -41,10 +45,18 @@ class HomeScreenViewModel(
                 flow.collect { timer ->
                     stateFlow.update {
                         if (timer == null) {
+                            extendPressCount = 0
+                            lastBlockStart = -1
                             HomeScreenState()
                         } else {
                             val (block, secondsInBlock) = timer.getCurrentBlock()
                                 ?: return@collect stateFlow.update { HomeScreenState() }
+
+                            val blockStart = timer.secondsElapsed - secondsInBlock
+                            if (blockStart != lastBlockStart) {
+                                lastBlockStart = blockStart
+                                extendPressCount = 0
+                            }
 
                             val remaining = block.seconds - secondsInBlock
                             val m = remaining / 60
@@ -72,6 +84,7 @@ class HomeScreenViewModel(
                                 isPaused = timer.isPaused,
                                 progress = progress,
                                 blockLabel = blockLabel,
+                                addButtonText = addButtonText(),
                             )
                         }
                     }
@@ -86,6 +99,7 @@ class HomeScreenViewModel(
             HomeScreenAction.DismissNotification -> dismissNotification()
             HomeScreenAction.TogglePausePlay -> togglePausePlay()
             HomeScreenAction.SkipBlock -> skipBlock()
+            HomeScreenAction.ExtendBlock -> extendBlock()
         }
     }
 
@@ -104,6 +118,23 @@ class HomeScreenViewModel(
 
     private fun skipBlock() {
         vmScope.launch { skipBlockUseCase.call(Unit) }
+    }
+
+    private fun extendBlock() {
+        val seconds = when (extendPressCount) {
+            0 -> 60
+            1 -> 300
+            else -> 900
+        }
+        extendPressCount++
+        stateFlow.update { it.copy(addButtonText = addButtonText()) }
+        vmScope.launch { extendBlockUseCase.call(seconds) }
+    }
+
+    private fun addButtonText(): String = when (extendPressCount) {
+        0 -> "1 min"
+        1 -> "5 min"
+        else -> "15 min"
     }
 
     private fun togglePausePlay() {

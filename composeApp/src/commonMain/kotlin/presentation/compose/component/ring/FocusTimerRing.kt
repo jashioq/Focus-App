@@ -51,7 +51,7 @@ fun FocusTimerRing(
     onSpringButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
     buttonGapSpacing: Dp = 42.dp,
-    strokeWidth: Dp = 16.dp,
+    strokeWidth: Dp = 22.dp,
     trackColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
     progressColor: Color = MaterialTheme.colorScheme.primary,
     borderColor: Color = MaterialTheme.colorScheme.primary,
@@ -90,7 +90,8 @@ fun FocusTimerRing(
                 ) { text: String ->
                     Text(
                         text = text,
-                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 24.sp,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
                     )
