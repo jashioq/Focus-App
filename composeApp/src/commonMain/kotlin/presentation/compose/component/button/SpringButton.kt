@@ -1,6 +1,7 @@
 package presentation.compose.component.button
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -91,12 +92,13 @@ fun SpringButton(
     glowRadius: Dp = 20.dp,
     glowIntensity: Float = 0.5f,
     shape: Shape = RoundedCornerShape(16.dp),
+    scaleAnimatableOverride: Animatable<Float, AnimationVector1D>? = null,
     content: @Composable () -> Unit,
 ) {
     val haptic = rememberHapticFeedback()
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scaleAnimatable = remember { Animatable(1f) }
+    val scaleAnimatable = scaleAnimatableOverride ?: remember { Animatable(1f) }
 
     val minimumAlpha = if (alphaThresholdScale > 1f) {
         ((scaleAnimatable.value - 1f) / (alphaThresholdScale - 1f)).coerceIn(0f, 1f)

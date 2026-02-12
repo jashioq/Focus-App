@@ -1,9 +1,11 @@
 package presentation.compose.component.ring
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,6 +66,7 @@ fun FocusTimerRing(
     val buttonGapSpacingPx = with(density) { buttonGapSpacing.toPx() }
     val strokeWidthPx = with(density) { strokeWidth.toPx() }
     val borderThicknessPx = with(density) { borderThickness.toPx() }
+    val overlayTextHPaddingPx = with(density) { 32.dp.toPx() }
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -72,6 +75,7 @@ fun FocusTimerRing(
     )
 
     val ring = remember { RingLayoutState() }
+    val buttonScaleAnimatable = remember { Animatable(1f) }
 
     Layout(
         content = {
@@ -83,10 +87,11 @@ fun FocusTimerRing(
                 lineHeight = 72.sp,
                 fontWeight = FontWeight.Bold,
             )
-            // Slot 1: Spring button (fades out as overlay activates)
+            // Slot 1: Spring button chrome (fades out, text invisible — slot 2 renders it)
             Box(modifier = Modifier.graphicsLayer { alpha = 1f - overlayFraction }) {
                 SpringButton(
                     onClick = onSpringButtonClick,
+                    scaleAnimatableOverride = buttonScaleAnimatable,
                 ) {
                     MorphTransition(
                         targetState = springButtonText,
@@ -96,14 +101,20 @@ fun FocusTimerRing(
                             text = text,
                             fontWeight = FontWeight.Normal,
                             fontSize = 24.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = Color.Transparent,
                             modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
                         )
                     }
                 }
             }
-            // Slot 2: Overlay label (fades in as overlay activates)
-            Box(modifier = Modifier.graphicsLayer { alpha = overlayFraction }) {
+            // Slot 2: Label that scales from button text size (24sp) to overlay size (28sp),
+            // also follows the spring button press scale
+            Box(modifier = Modifier.graphicsLayer {
+                val overlayScale = (24f / 28f) + (1f - 24f / 28f) * overlayFraction
+                val buttonPress = buttonScaleAnimatable.value
+                scaleX = overlayScale * buttonPress
+                scaleY = overlayScale * buttonPress
+            }) {
                 MorphTransition(
                     targetState = springButtonText,
                     label = "overlayLabelMorph",
@@ -113,6 +124,7 @@ fun FocusTimerRing(
                         fontWeight = FontWeight.Normal,
                         fontSize = 28.sp,
                         color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
                     )
                 }
             }
@@ -174,8 +186,8 @@ fun FocusTimerRing(
                 style = Stroke(width = borderThicknessPx, cap = StrokeCap.Round),
             )
         },
-        measurePolicy = remember(buttonGapSpacingPx, strokeWidthPx) {
-            RingMeasurePolicy(ring, buttonGapSpacingPx, strokeWidthPx)
+        measurePolicy = remember(buttonGapSpacingPx, strokeWidthPx, overlayTextHPaddingPx) {
+            RingMeasurePolicy(ring, buttonGapSpacingPx, strokeWidthPx, overlayTextHPaddingPx)
         },
     )
 }
@@ -184,6 +196,7 @@ private class RingMeasurePolicy(
     private val ring: RingLayoutState,
     private val buttonGapSpacingPx: Float,
     private val strokeWidthPx: Float,
+    private val overlayTextHPaddingPx: Float,
 ) : MeasurePolicy {
     override fun MeasureScope.measure(
         measurables: List<Measurable>,
@@ -201,8 +214,8 @@ private class RingMeasurePolicy(
         val buttonGapRatio = (buttonChord / (2f * ringRadius)).coerceIn(-1f, 1f)
         val buttonGapAngleDeg = (2f * asin(buttonGapRatio) * 180f / kotlin.math.PI).toFloat()
 
-        // Gap angle for the overlay text
-        val overlayTextChord = overlayTextPlaceable.width + 2f * buttonGapSpacingPx
+        // Gap angle for the overlay text — subtract padding so the gap closes to the text width
+        val overlayTextChord = (overlayTextPlaceable.width - 2f * overlayTextHPaddingPx) + 2f * buttonGapSpacingPx
         val overlayTextGapRatio = (overlayTextChord / (2f * ringRadius)).coerceIn(-1f, 1f)
         val overlayTextGapAngleDeg =
             (2f * asin(overlayTextGapRatio) * 180f / kotlin.math.PI).toFloat()
