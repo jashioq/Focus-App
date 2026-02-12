@@ -41,7 +41,7 @@ fun ScaleOnTouchButton(
                 animationSpec = tween(scaleDurationMs, easing = FastOutSlowInEasing),
             )
             haptic.performHeavyImpact()
-        } else {
+        } else if (scaleAnimatable.value != 1f) {
             haptic.performHeavyImpact()
             scaleAnimatable.animateTo(
                 targetValue = 1f,

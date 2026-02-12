@@ -190,6 +190,16 @@ private fun TimerViewContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .pointerInput(overlayFraction > 0f) {
+                if (overlayFraction > 0f) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() }
+                        }
+                    }
+                }
+            }
             .displayCutoutPadding()
             .navigationBarsPadding()
             .padding(16.dp),
