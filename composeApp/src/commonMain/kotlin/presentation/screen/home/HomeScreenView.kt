@@ -36,9 +36,7 @@ fun HomeScreenView(
     AnimatedContent(
         targetState = isRunning,
         modifier = modifier
-            .fillMaxSize()
-            .displayCutoutPadding()
-            .navigationBarsPadding(),
+            .fillMaxSize(),
         transitionSpec = {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> if (targetState) fullWidth else -fullWidth },
@@ -65,7 +63,10 @@ fun HomeScreenView(
         } else {
             PlanningView(
                 onStartTimer = onShowNotification,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .displayCutoutPadding()
+                    .navigationBarsPadding()
+                    .padding(16.dp),
             )
         }
     }

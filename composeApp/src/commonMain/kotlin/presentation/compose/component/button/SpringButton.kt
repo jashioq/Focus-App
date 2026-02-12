@@ -32,7 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import util.Haptic
 import util.rememberHapticFeedback
-import util.tiltBorder
+import presentation.compose.component.border.tiltBorder
 
 data class ScaleKeyframe(
     val targetScale: Float,

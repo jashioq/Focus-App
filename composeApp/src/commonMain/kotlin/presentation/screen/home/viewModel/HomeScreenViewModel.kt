@@ -30,6 +30,7 @@ class HomeScreenViewModel(
 ) {
     private var extendPressCount = 0
     private var lastBlockStart = -1
+    private var currentBlockMode: TimerMode = TimerMode.FOCUS
 
     private val timerSequence = listOf(
         TimerBlock(mode = TimerMode.FOCUS, seconds = 150),
@@ -57,6 +58,7 @@ class HomeScreenViewModel(
                                 lastBlockStart = blockStart
                                 extendPressCount = 0
                             }
+                            currentBlockMode = block.mode
 
                             val remaining = block.seconds - secondsInBlock
                             val m = remaining / 60
@@ -124,7 +126,7 @@ class HomeScreenViewModel(
         val seconds = when (extendPressCount) {
             0 -> 60
             1 -> 300
-            else -> 900
+            else -> if (currentBlockMode == TimerMode.BREAK) 300 else 900
         }
         extendPressCount++
         stateFlow.update { it.copy(addButtonText = addButtonText()) }
@@ -134,7 +136,7 @@ class HomeScreenViewModel(
     private fun addButtonText(): String = when (extendPressCount) {
         0 -> "1 min"
         1 -> "5 min"
-        else -> "15 min"
+        else -> if (currentBlockMode == TimerMode.BREAK) "5 min" else "15 min"
     }
 
     private fun togglePausePlay() {
