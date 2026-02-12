@@ -6,6 +6,8 @@ import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -97,6 +99,17 @@ fun TimerView(
         }
     }
 
+    // Animate overlay fraction for ring button↔text crossfade and gap angle
+    val overlayFraction = remember { Animatable(0f) }
+    LaunchedEffect(isFocusOverlayActive) {
+        val duration =
+            if (isFocusOverlayActive) FocusOverlayEnterDurationMs else FocusOverlayExitDurationMs
+        overlayFraction.animateTo(
+            if (isFocusOverlayActive) 1f else 0f,
+            tween(duration, easing = FastOutSlowInEasing),
+        )
+    }
+
     SharedTransitionLayout(
         modifier = modifier.pointerInput(Unit) {
             awaitPointerEventScope {
@@ -134,6 +147,7 @@ fun TimerView(
                     timerText = timerText,
                     springButtonText = blockLabel,
                     onSpringButtonClick = onSkipBlock,
+                    overlayFraction = overlayFraction.value,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedVisibilityScope = this@AnimatedContent,
                 )
@@ -144,6 +158,7 @@ fun TimerView(
                     progress = progress,
                     blockLabel = blockLabel,
                     addButtonText = addButtonText,
+                    overlayFraction = overlayFraction.value,
                     onDismissNotification = onDismissNotification,
                     onTogglePausePlay = onTogglePausePlay,
                     onSkipBlock = onSkipBlock,
@@ -164,6 +179,7 @@ private fun TimerViewContent(
     progress: Float,
     blockLabel: String,
     addButtonText: String,
+    overlayFraction: Float,
     onDismissNotification: () -> Unit,
     onTogglePausePlay: () -> Unit,
     onSkipBlock: () -> Unit,
@@ -188,6 +204,7 @@ private fun TimerViewContent(
                 timerText = timerText,
                 springButtonText = blockLabel,
                 onSpringButtonClick = onSkipBlock,
+                overlayFraction = overlayFraction,
                 modifier = Modifier.sharedElement(
                     sharedContentState = rememberSharedContentState(key = "timerRing"),
                     animatedVisibilityScope = animatedVisibilityScope,

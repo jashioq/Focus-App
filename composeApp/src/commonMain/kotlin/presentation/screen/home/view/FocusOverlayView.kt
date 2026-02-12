@@ -27,6 +27,7 @@ fun FocusOverlayView(
     timerText: String,
     springButtonText: String,
     onSpringButtonClick: () -> Unit,
+    overlayFraction: Float,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -45,6 +46,7 @@ fun FocusOverlayView(
                 timerText = timerText,
                 springButtonText = springButtonText,
                 onSpringButtonClick = onSpringButtonClick,
+                overlayFraction = overlayFraction,
                 modifier = Modifier
                     .sharedElement(
                         sharedContentState = rememberSharedContentState(key = "timerRing"),
