@@ -33,11 +33,11 @@ class HomeScreenViewModel(
     private var currentBlockMode: TimerMode = TimerMode.FOCUS
 
     private val timerSequence = listOf(
-        TimerBlock(mode = TimerMode.FOCUS, seconds = 150),
-        TimerBlock(mode = TimerMode.BREAK, seconds = 100),
-        TimerBlock(mode = TimerMode.FOCUS, seconds = 200),
-        TimerBlock(mode = TimerMode.BREAK, seconds = 150),
-        TimerBlock(mode = TimerMode.FOCUS, seconds = 100),
+        TimerBlock(mode = TimerMode.FOCUS, seconds = 1800),
+        TimerBlock(mode = TimerMode.BREAK, seconds = 600),
+        TimerBlock(mode = TimerMode.FOCUS, seconds = 1800),
+        TimerBlock(mode = TimerMode.BREAK, seconds = 600),
+        TimerBlock(mode = TimerMode.FOCUS, seconds = 1800),
     )
 
     init {
