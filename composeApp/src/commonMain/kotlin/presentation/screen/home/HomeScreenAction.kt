@@ -1,8 +1,8 @@
 package presentation.screen.home
 
-open class HomeScreenAction {
-    data object ShowNotification : HomeScreenAction()
-    data object DismissNotification : HomeScreenAction()
+sealed class HomeScreenAction {
+    data object StartTimer : HomeScreenAction()
+    data object StopTimer : HomeScreenAction()
     data object TogglePausePlay : HomeScreenAction()
     data object SkipBlock : HomeScreenAction()
     data object ExtendBlock : HomeScreenAction()

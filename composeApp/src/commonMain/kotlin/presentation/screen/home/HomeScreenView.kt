@@ -27,8 +27,8 @@ fun HomeScreenView(
     progress: Float,
     blockLabel: String,
     addButtonText: String,
-    onShowNotification: () -> Unit,
-    onDismissNotification: () -> Unit,
+    onStartTimer: () -> Unit,
+    onStopTimer: () -> Unit,
     onTogglePausePlay: () -> Unit,
     onSkipBlock: () -> Unit,
     onExtendBlock: () -> Unit,
@@ -55,14 +55,14 @@ fun HomeScreenView(
                 progress = progress,
                 blockLabel = blockLabel,
                 addButtonText = addButtonText,
-                onDismissNotification = onDismissNotification,
+                onStopTimer = onStopTimer,
                 onTogglePausePlay = onTogglePausePlay,
                 onSkipBlock = onSkipBlock,
                 onExtendBlock = onExtendBlock,
             )
         } else {
             PlanningView(
-                onStartTimer = onShowNotification,
+                onStartTimer = onStartTimer,
                 modifier = Modifier
                     .displayCutoutPadding()
                     .navigationBarsPadding()

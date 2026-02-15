@@ -2,8 +2,6 @@ package data.repository
 
 import domain.model.TIMER_STATE_KEY
 import domain.model.Timer
-import domain.model.TimerBlock
-import domain.model.TimerMode
 import domain.repository.DataStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,15 +13,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import platform.notification.LiveTimerNotification
 import util.currentTimeSeconds
 
 class TimerRepository(
     private val liveTimerNotification: LiveTimerNotification,
     private val dataStoreRepository: DataStoreRepository,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
 ) : domain.repository.TimerRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val _timerFlow = MutableStateFlow<Timer?>(null)
     private var countdownJob: Job? = null
     private var notificationDismissed: Boolean = false
@@ -86,11 +87,7 @@ class TimerRepository(
     override fun pause() {
         val current = _timerFlow.value ?: return
         countdownJob?.cancel()
-        val pausedTimer = Timer(
-            sequence = current.sequence,
-            secondsElapsed = current.secondsElapsed,
-            isPaused = true,
-        )
+        val pausedTimer = current.copy(isPaused = true)
         _timerFlow.value = pausedTimer
         if (!notificationDismissed) liveTimerNotification.set(pausedTimer)
         scope.launch { saveTimerState(pausedTimer) }
@@ -98,43 +95,24 @@ class TimerRepository(
 
     override fun skipBlock() {
         val current = _timerFlow.value ?: return
-        var accumulatedSeconds = 0
-        for (block in current.sequence) {
-            accumulatedSeconds += block.seconds
-            if (current.secondsElapsed < accumulatedSeconds) {
-                if (accumulatedSeconds >= current.totalTime) {
-                    stop()
-                } else {
-                    val skippedTimer = Timer(
-                        sequence = current.sequence,
-                        secondsElapsed = accumulatedSeconds,
-                        isPaused = current.isPaused,
-                    )
-                    _timerFlow.value = skippedTimer
-                    if (!notificationDismissed) liveTimerNotification.set(skippedTimer)
-                    scope.launch { saveTimerState(skippedTimer) }
-                }
-                return
-            }
+        val position = current.getCurrentBlock() ?: return
+        val blockEndSeconds = position.blockStartSeconds + position.block.seconds
+        if (blockEndSeconds >= current.totalTime) {
+            stop()
+        } else {
+            val skippedTimer = current.copy(secondsElapsed = blockEndSeconds)
+            _timerFlow.value = skippedTimer
+            if (!notificationDismissed) liveTimerNotification.set(skippedTimer)
+            scope.launch { saveTimerState(skippedTimer) }
         }
     }
 
     override fun extendBlock(seconds: Int) {
         val current = _timerFlow.value ?: return
-        var accumulatedSeconds = 0
+        val position = current.getCurrentBlock() ?: return
         val newSequence = current.sequence.toMutableList()
-        for ((index, block) in current.sequence.withIndex()) {
-            accumulatedSeconds += block.seconds
-            if (current.secondsElapsed < accumulatedSeconds) {
-                newSequence[index] = block.copy(seconds = block.seconds + seconds)
-                break
-            }
-        }
-        val extendedTimer = Timer(
-            sequence = newSequence,
-            secondsElapsed = current.secondsElapsed,
-            isPaused = current.isPaused,
-        )
+        newSequence[position.index] = position.block.copy(seconds = position.block.seconds + seconds)
+        val extendedTimer = current.copy(sequence = newSequence)
         _timerFlow.value = extendedTimer
         if (!notificationDismissed) liveTimerNotification.set(extendedTimer)
         scope.launch { saveTimerState(extendedTimer) }
@@ -142,11 +120,7 @@ class TimerRepository(
 
     override fun resume() {
         val current = _timerFlow.value ?: return
-        val resumedTimer = Timer(
-            sequence = current.sequence,
-            secondsElapsed = current.secondsElapsed,
-            isPaused = false,
-        )
+        val resumedTimer = current.copy(isPaused = false)
         _timerFlow.value = resumedTimer
         if (!notificationDismissed) liveTimerNotification.set(resumedTimer)
         startCountdown()
@@ -165,21 +139,25 @@ class TimerRepository(
                     stop()
                     break
                 }
-                _timerFlow.value = Timer(
-                    sequence = current.sequence,
-                    secondsElapsed = newSecondsElapsed,
-                    isPaused = false,
-                )
+                _timerFlow.value = current.copy(secondsElapsed = newSecondsElapsed)
             }
         }
     }
 
+    @Serializable
+    private data class PersistedTimerState(
+        val timer: Timer,
+        val timestamp: Double,
+        val notificationDismissed: Boolean,
+    )
+
     private suspend fun saveTimerState(timer: Timer) {
-        val blockSeconds = timer.sequence.joinToString(",") { it.seconds.toString() }
-        val blockModes = timer.sequence.joinToString(",") { it.mode.name }
-        val timestamp = currentTimeSeconds()
-        val serialized = "$blockSeconds|$blockModes|${timer.secondsElapsed}|${timer.isPaused}|$timestamp|$notificationDismissed"
-        dataStoreRepository.putStringPreference(TIMER_STATE_KEY, serialized)
+        val state = PersistedTimerState(
+            timer = timer,
+            timestamp = currentTimeSeconds(),
+            notificationDismissed = notificationDismissed,
+        )
+        dataStoreRepository.putStringPreference(TIMER_STATE_KEY, Json.encodeToString(state))
     }
 
     private suspend fun clearTimerState() {
@@ -191,39 +169,23 @@ class TimerRepository(
             .getOrNull()?.first() ?: return null
         if (serialized.isBlank()) return null
 
-        val parts = serialized.split("|")
-        if (parts.size < 6) return null
+        val state = runCatching { Json.decodeFromString<PersistedTimerState>(serialized) }
+            .getOrNull() ?: return null
 
-        val blockSecondsList = parts[0].split(",").mapNotNull { it.toIntOrNull() }
-        val blockModesList = parts[1].split(",").mapNotNull {
-            runCatching { TimerMode.valueOf(it) }.getOrNull()
-        }
-        if (blockSecondsList.isEmpty() || blockSecondsList.size != blockModesList.size) return null
-
-        val secondsElapsed = parts[2].toIntOrNull() ?: return null
-        val isPaused = parts[3].toBooleanStrictOrNull() ?: return null
-        val savedTimestamp = parts[4].toDoubleOrNull() ?: return null
-        notificationDismissed = parts[5].toBooleanStrictOrNull() ?: false
-
-        val sequence = blockSecondsList.zip(blockModesList) { s, m -> TimerBlock(m, s) }
-        val totalTime = sequence.sumOf { it.seconds }
+        notificationDismissed = state.notificationDismissed
 
         val now = currentTimeSeconds()
-        val actualElapsed = if (isPaused) {
-            secondsElapsed
+        val actualElapsed = if (state.timer.isPaused) {
+            state.timer.secondsElapsed
         } else {
-            secondsElapsed + (now - savedTimestamp).toInt()
+            state.timer.secondsElapsed + (now - state.timestamp).toInt()
         }
 
-        if (actualElapsed >= totalTime) {
+        if (actualElapsed >= state.timer.totalTime) {
             clearTimerState()
             return null
         }
 
-        return Timer(
-            sequence = sequence,
-            secondsElapsed = actualElapsed,
-            isPaused = isPaused,
-        )
+        return state.timer.copy(secondsElapsed = actualElapsed)
     }
 }

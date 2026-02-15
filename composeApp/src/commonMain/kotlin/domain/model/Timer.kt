@@ -1,31 +1,49 @@
 package domain.model
 
-class Timer(
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
+@Serializable
+data class Timer(
     val sequence: List<TimerBlock>,
     val secondsElapsed: Int,
     val isPaused: Boolean,
 ) {
-    val totalTime =
-        this.sequence.sumOf { it.seconds }
+    @Transient
+    val totalTime: Int = sequence.sumOf { it.seconds }
 
-    fun getCurrentBlock(): Pair<TimerBlock, Int>? {
+    fun getCurrentBlock(): BlockPosition? {
         var accumulatedSeconds = 0
-        for (block in sequence) {
+        for ((index, block) in sequence.withIndex()) {
             val blockStart = accumulatedSeconds
             accumulatedSeconds += block.seconds
             if (secondsElapsed < accumulatedSeconds) {
-                return Pair(block, secondsElapsed - blockStart)
+                return BlockPosition(
+                    block = block,
+                    index = index,
+                    secondsInBlock = secondsElapsed - blockStart,
+                    blockStartSeconds = blockStart,
+                )
             }
         }
         return null
     }
 }
 
+data class BlockPosition(
+    val block: TimerBlock,
+    val index: Int,
+    val secondsInBlock: Int,
+    val blockStartSeconds: Int,
+)
+
+@Serializable
 enum class TimerMode {
     FOCUS,
     BREAK
 }
 
+@Serializable
 data class TimerBlock(
     val mode: TimerMode,
     val seconds: Int,

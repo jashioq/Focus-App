@@ -19,11 +19,11 @@ fun HomeScreen(
         progress = state.progress,
         blockLabel = state.blockLabel,
         addButtonText = state.addButtonText,
-        onShowNotification = {
-            homeScreenViewModel.sendAction(HomeScreenAction.ShowNotification)
+        onStartTimer = {
+            homeScreenViewModel.sendAction(HomeScreenAction.StartTimer)
         },
-        onDismissNotification = {
-            homeScreenViewModel.sendAction(HomeScreenAction.DismissNotification)
+        onStopTimer = {
+            homeScreenViewModel.sendAction(HomeScreenAction.StopTimer)
         },
         onTogglePausePlay = {
             homeScreenViewModel.sendAction(HomeScreenAction.TogglePausePlay)

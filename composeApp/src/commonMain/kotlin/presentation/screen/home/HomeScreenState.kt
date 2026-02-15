@@ -6,5 +6,6 @@ data class HomeScreenState(
     val isPaused: Boolean = true,
     val progress: Float = 0f,
     val blockLabel: String = "Focus",
+    val extendPressCount: Int = 0,
     val addButtonText: String = "1 min",
 )

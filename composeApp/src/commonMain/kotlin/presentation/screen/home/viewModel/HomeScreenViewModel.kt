@@ -28,10 +28,6 @@ class HomeScreenViewModel(
     scope = scope,
     logger = logger,
 ) {
-    private var extendPressCount = 0
-    private var lastBlockStart = -1
-    private var currentBlockMode: TimerMode = TimerMode.FOCUS
-
     private val timerSequence = listOf(
         TimerBlock(mode = TimerMode.FOCUS, seconds = 1800),
         TimerBlock(mode = TimerMode.BREAK, seconds = 600),
@@ -44,51 +40,47 @@ class HomeScreenViewModel(
         vmScope.launch {
             emitTimerFlowUseCase.call(Unit).onSuccess { flow ->
                 flow.collect { timer ->
-                    stateFlow.update {
-                        if (timer == null) {
-                            extendPressCount = 0
-                            lastBlockStart = -1
-                            HomeScreenState()
-                        } else {
-                            val (block, secondsInBlock) = timer.getCurrentBlock()
-                                ?: return@collect stateFlow.update { HomeScreenState() }
+                    if (timer == null) {
+                        stateFlow.update { HomeScreenState() }
+                        return@collect
+                    }
 
-                            val blockStart = timer.secondsElapsed - secondsInBlock
-                            if (blockStart != lastBlockStart) {
-                                lastBlockStart = blockStart
-                                extendPressCount = 0
-                            }
-                            currentBlockMode = block.mode
+                    val position = timer.getCurrentBlock()
+                        ?: return@collect stateFlow.update { HomeScreenState() }
 
-                            val remaining = block.seconds - secondsInBlock
-                            val m = remaining / 60
-                            val s = remaining % 60
-                            val timerText = "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
+                    val remaining = position.block.seconds - position.secondsInBlock
+                    val m = remaining / 60
+                    val s = remaining % 60
+                    val timerText = "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
 
-                            val blockProgress = if (block.seconds > 0) {
-                                ((secondsInBlock + 1).toFloat() / block.seconds.toFloat()).coerceIn(0f, 1f)
-                            } else {
-                                0f
-                            }
-                            val progress = when (block.mode) {
-                                TimerMode.FOCUS -> blockProgress
-                                TimerMode.BREAK -> 1f - blockProgress
-                            }
+                    val blockProgress = if (position.block.seconds > 0) {
+                        ((position.secondsInBlock + 1).toFloat() / position.block.seconds.toFloat()).coerceIn(0f, 1f)
+                    } else {
+                        0f
+                    }
+                    val progress = when (position.block.mode) {
+                        TimerMode.FOCUS -> blockProgress
+                        TimerMode.BREAK -> 1f - blockProgress
+                    }
 
-                            val blockLabel = when (block.mode) {
-                                TimerMode.FOCUS -> "Focus"
-                                TimerMode.BREAK -> "Break"
-                            }
+                    val blockLabel = when (position.block.mode) {
+                        TimerMode.FOCUS -> "Focus"
+                        TimerMode.BREAK -> "Break"
+                    }
 
-                            HomeScreenState(
-                                timerText = timerText,
-                                isRunning = true,
-                                isPaused = timer.isPaused,
-                                progress = progress,
-                                blockLabel = blockLabel,
-                                addButtonText = addButtonText(),
-                            )
-                        }
+                    stateFlow.update { current ->
+                        val blockChanged = current.isRunning && current.blockLabel != blockLabel
+                        val extendPressCount = if (blockChanged) 0 else current.extendPressCount
+
+                        HomeScreenState(
+                            timerText = timerText,
+                            isRunning = true,
+                            isPaused = timer.isPaused,
+                            progress = progress,
+                            blockLabel = blockLabel,
+                            extendPressCount = extendPressCount,
+                            addButtonText = addButtonText(extendPressCount, blockLabel),
+                        )
                     }
                 }
             }
@@ -97,15 +89,15 @@ class HomeScreenViewModel(
 
     override fun HomeScreenAction.process() {
         when (this) {
-            HomeScreenAction.ShowNotification -> showNotification()
-            HomeScreenAction.DismissNotification -> dismissNotification()
+            HomeScreenAction.StartTimer -> startTimer()
+            HomeScreenAction.StopTimer -> stopTimer()
             HomeScreenAction.TogglePausePlay -> togglePausePlay()
             HomeScreenAction.SkipBlock -> skipBlock()
             HomeScreenAction.ExtendBlock -> extendBlock()
         }
     }
 
-    private fun showNotification() {
+    private fun startTimer() {
         val timer = Timer(
             sequence = timerSequence,
             secondsElapsed = 0,
@@ -114,7 +106,7 @@ class HomeScreenViewModel(
         vmScope.launch { startTimerUseCase.call(timer) }
     }
 
-    private fun dismissNotification() {
+    private fun stopTimer() {
         vmScope.launch { stopTimerUseCase.call(Unit) }
     }
 
@@ -123,21 +115,28 @@ class HomeScreenViewModel(
     }
 
     private fun extendBlock() {
-        val seconds = when (extendPressCount) {
+        val current = stateFlow.value
+        val seconds = when (current.extendPressCount) {
             0 -> 60
             1 -> 300
-            else -> if (currentBlockMode == TimerMode.BREAK) 300 else 900
+            else -> if (current.blockLabel == "Break") 300 else 900
         }
-        extendPressCount++
-        stateFlow.update { it.copy(addButtonText = addButtonText()) }
+        stateFlow.update {
+            val newCount = it.extendPressCount + 1
+            it.copy(
+                extendPressCount = newCount,
+                addButtonText = addButtonText(newCount, it.blockLabel),
+            )
+        }
         vmScope.launch { extendBlockUseCase.call(seconds) }
     }
 
-    private fun addButtonText(): String = when (extendPressCount) {
-        0 -> "1 min"
-        1 -> "5 min"
-        else -> if (currentBlockMode == TimerMode.BREAK) "5 min" else "15 min"
-    }
+    private fun addButtonText(extendPressCount: Int, blockLabel: String): String =
+        when (extendPressCount) {
+            0 -> "1 min"
+            1 -> "5 min"
+            else -> if (blockLabel == "Break") "5 min" else "15 min"
+        }
 
     private fun togglePausePlay() {
         vmScope.launch {
