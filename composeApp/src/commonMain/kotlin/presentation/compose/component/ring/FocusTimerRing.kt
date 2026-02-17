@@ -59,8 +59,11 @@ fun FocusTimerRing(
     strokeWidth: Dp = 22.dp,
     trackColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
     progressColor: Color = MaterialTheme.colorScheme.primary,
+    progressBrush: Brush? = null,
     borderColor: Color = MaterialTheme.colorScheme.primary,
+    borderPeakAlpha: Float = 1f,
     borderThickness: Dp = 1.5.dp,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     val density = LocalDensity.current
     val buttonGapSpacingPx = with(density) { buttonGapSpacing.toPx() }
@@ -83,6 +86,7 @@ fun FocusTimerRing(
             TimerText(
                 text = timerText,
                 isPaused = isPaused,
+                color = contentColor,
                 fontSize = 64.sp,
                 lineHeight = 72.sp,
                 fontWeight = FontWeight.Bold,
@@ -123,7 +127,7 @@ fun FocusTimerRing(
                         text = text,
                         fontWeight = FontWeight.Normal,
                         fontSize = 28.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = contentColor,
                         modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
                     )
                 }
@@ -154,25 +158,13 @@ fun FocusTimerRing(
                 style = stroke,
             )
 
-            // Progress
-            if (animatedProgress > 0f) {
-                drawArc(
-                    color = progressColor,
-                    startAngle = startAngle,
-                    sweepAngle = arcSpan * animatedProgress,
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
-                    style = stroke,
-                )
-            }
-
             // Tilt border — sweep gradient bright at top, fading to sides
+            // Drawn before progress so the filled arc paints over it
             val borderBrush = Brush.sweepGradient(
                 0.00f to borderColor.copy(alpha = 0.1f),
                 0.25f to borderColor.copy(alpha = 0.1f),
                 0.50f to borderColor.copy(alpha = 0.1f),
-                0.75f to borderColor.copy(alpha = 1f),
+                0.75f to borderColor.copy(alpha = borderPeakAlpha),
                 1.00f to borderColor.copy(alpha = 0.1f),
                 center = center,
             )
@@ -185,6 +177,32 @@ fun FocusTimerRing(
                 size = arcSize,
                 style = Stroke(width = borderThicknessPx, cap = StrokeCap.Round),
             )
+
+            // Progress
+            if (animatedProgress > 0f) {
+                val resolvedBrush = progressBrush
+                if (resolvedBrush != null) {
+                    drawArc(
+                        brush = resolvedBrush,
+                        startAngle = startAngle,
+                        sweepAngle = arcSpan * animatedProgress,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = stroke,
+                    )
+                } else {
+                    drawArc(
+                        color = progressColor,
+                        startAngle = startAngle,
+                        sweepAngle = arcSpan * animatedProgress,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = stroke,
+                    )
+                }
+            }
         },
         measurePolicy = remember(buttonGapSpacingPx, strokeWidthPx, overlayTextHPaddingPx) {
             RingMeasurePolicy(ring, buttonGapSpacingPx, strokeWidthPx, overlayTextHPaddingPx)

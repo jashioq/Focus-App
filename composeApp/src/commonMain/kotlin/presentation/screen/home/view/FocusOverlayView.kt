@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import presentation.compose.component.ring.FocusTimerRing
 
 private const val FocusOverlayEnterDurationMs = 3000
@@ -47,6 +50,14 @@ fun FocusOverlayView(
                 springButtonText = springButtonText,
                 onSpringButtonClick = onSpringButtonClick,
                 overlayFraction = overlayFraction,
+                progressBrush = Brush.verticalGradient(
+                    listOf(
+                        lerp(Color.White, Color.Gray, overlayFraction),
+                        Color.Gray,
+                    ),
+                ),
+                borderPeakAlpha = lerp(1f, 0.1f, overlayFraction),
+                contentColor = lerp(Color.White, Color.Gray, overlayFraction),
                 modifier = Modifier
                     .sharedElement(
                         sharedContentState = rememberSharedContentState(key = "timerRing"),

@@ -39,6 +39,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.util.lerp
 import presentation.compose.component.ring.FocusTimerRing
 import presentation.compose.component.timerControl.MorphTransition
 import presentation.compose.component.timerControl.TimerControls
@@ -47,6 +51,8 @@ private const val IdleTimeoutMs = 5_000L
 private const val ExtendedIdleTimeoutMs = 15_000L
 private const val FocusOverlayEnterDurationMs = 3000
 private const val FocusOverlayExitDurationMs = 500
+private val BrightColor = Color.White
+private val DarkColor = Color.LightGray
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -215,6 +221,14 @@ private fun TimerViewContent(
                 springButtonText = blockLabel,
                 onSpringButtonClick = onSkipBlock,
                 overlayFraction = overlayFraction,
+                progressBrush = Brush.verticalGradient(
+                    listOf(
+                        lerp(BrightColor, DarkColor, overlayFraction),
+                        DarkColor,
+                    ),
+                ),
+                borderPeakAlpha = lerp(1f, 0.1f, overlayFraction),
+                contentColor = lerp(BrightColor, DarkColor, overlayFraction),
                 modifier = Modifier.sharedElement(
                     sharedContentState = rememberSharedContentState(key = "timerRing"),
                     animatedVisibilityScope = animatedVisibilityScope,

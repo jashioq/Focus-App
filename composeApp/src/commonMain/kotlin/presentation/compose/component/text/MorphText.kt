@@ -7,6 +7,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -45,10 +46,13 @@ fun MorphText(
                 ) { targetChar ->
                     androidx.compose.material3.Text(
                         text = targetChar.toString(),
-                        color = color,
-                        fontSize = fontSize,
-                        lineHeight = lineHeight,
-                        fontWeight = fontWeight,
+                        style = TextStyle(
+                            color = color,
+                            fontSize = fontSize,
+                            lineHeight = lineHeight,
+                            fontWeight = fontWeight,
+                            fontFeatureSettings = "tnum",
+                        ),
                     )
                 }
             }
