@@ -88,7 +88,7 @@ fun CalendarScreenView(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.CenterEnd,
         ) {
             // null  → button hidden (morphs out/in)
             // true / false → button visible with frozen direction
