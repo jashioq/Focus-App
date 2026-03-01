@@ -3,6 +3,7 @@
 package presentation.screen.calendar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,6 +39,7 @@ import com.kizitonwose.calendar.core.plusMonths
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toLocalDateTime
@@ -52,6 +54,7 @@ fun CalendarScreenView(
     onScrollToCurrentMonth: () -> Unit,
 ) {
     val currentMonth = state.currentMonth
+    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
     val startMonth = remember(currentMonth) { currentMonth.minusMonths(12) }
     val endMonth = remember(currentMonth) { currentMonth.plusMonths(12) }
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
@@ -150,7 +153,7 @@ fun CalendarScreenView(
                 MonthHeader(month.yearMonth)
             },
             dayContent = { day ->
-                Day(day)
+                Day(day, today)
             },
         )
     }
@@ -190,19 +193,28 @@ private fun DaysOfWeekHeader() {
 }
 
 @Composable
-private fun Day(day: CalendarDay) {
+private fun Day(day: CalendarDay, today: LocalDate) {
     val isCurrentMonth = day.position == DayPosition.MonthDate
+    val isToday = day.date == today
     Box(
         modifier = Modifier.aspectRatio(1f),
         contentAlignment = Alignment.Center,
     ) {
+        if (isToday) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape),
+            )
+        }
         Text(
             text = day.date.dayOfMonth.toString(),
-            color = if (isCurrentMonth) {
-                MaterialTheme.colorScheme.onBackground
-            } else {
-                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+            color = when {
+                isToday -> MaterialTheme.colorScheme.onPrimary
+                isCurrentMonth -> MaterialTheme.colorScheme.onBackground
+                else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
             },
+            fontWeight = if (isToday) FontWeight.Bold else null,
             fontSize = 14.sp,
         )
     }
