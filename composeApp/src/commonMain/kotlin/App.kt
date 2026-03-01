@@ -1,6 +1,13 @@
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import domain.model.OnboardingState
 import navigation.MainNavHost
 import navigation.OnboardingNavHost
@@ -14,7 +21,13 @@ import presentation.util.koinViewModel
 fun App() {
     Theme {
         KoinContext {
-            GetNavHost()
+            Box(
+                modifier = Modifier.windowInsetsPadding(
+                    WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                ),
+            ) {
+                GetNavHost()
+            }
         }
     }
 }

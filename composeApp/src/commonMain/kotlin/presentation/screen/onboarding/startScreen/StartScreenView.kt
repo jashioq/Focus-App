@@ -2,9 +2,7 @@ package presentation.screen.onboarding.startScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,9 +20,7 @@ fun StartScreenView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp)
-            .displayCutoutPadding()
-            .navigationBarsPadding(),
+            .padding(32.dp),
         verticalArrangement = Arrangement.SpaceAround,
     ) {
         PrimaryButton(
