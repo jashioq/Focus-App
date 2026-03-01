@@ -79,7 +79,7 @@ fun CalendarScreenView(
 
     // Frozen direction: only updated while button is visible so the icon doesn't
     // flip mid-animation when the calendar scrolls back to the current month
-    var frozenIsBeforeCurrent by remember { mutableStateOf<Boolean>(liveIsBeforeCurrent) }
+    var frozenIsBeforeCurrent by remember { mutableStateOf(liveIsBeforeCurrent) }
     LaunchedEffect(liveIsBeforeCurrent, state.isOnCurrentMonth) {
         if (!state.isOnCurrentMonth) {
             frozenIsBeforeCurrent = liveIsBeforeCurrent
@@ -108,17 +108,18 @@ fun CalendarScreenView(
             val greetingText = if (state.userName.isBlank()) {
                 "$salutation!"
             } else {
-                "$salutation ${state.userName}!"
+                "$salutation, ${state.userName}"
             }
 
             ReactiveSizeText(
                 text = greetingText,
-                maxFontSize = 18.sp,
+                maxFontSize = 32.sp,
                 maxLines = 1,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
-                    .weight(1f),
+                    .weight(1f)
+                    .padding(end = 48.dp),
             )
 
             // null  → button hidden (morphs out/in)
