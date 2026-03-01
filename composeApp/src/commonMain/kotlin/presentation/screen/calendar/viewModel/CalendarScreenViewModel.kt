@@ -1,6 +1,7 @@
 package presentation.screen.calendar.viewModel
 
 import com.kizitonwose.calendar.core.now
+import domain.model.Task
 import domain.util.UseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ import util.Logger
 
 class CalendarScreenViewModel(
     private val emitUserNameUseCase: UseCase<Unit, Flow<String>>,
+    private val emitAllTasksUseCase: UseCase<Unit, Flow<List<Task>>>,
     scope: CoroutineScope? = null,
     logger: Logger? = null,
 ) : CoreViewModel<CalendarScreenState, CalendarScreenAction>(
@@ -25,6 +27,11 @@ class CalendarScreenViewModel(
         vmScope.launch {
             emitUserNameUseCase.call(Unit).getOrNull()?.collect { name ->
                 stateFlow.update { it.copy(userName = name) }
+            }
+        }
+        vmScope.launch {
+            emitAllTasksUseCase.call(Unit).getOrNull()?.collect { tasks ->
+                vmLogger.d("dupa", "Tasks: $tasks")
             }
         }
     }

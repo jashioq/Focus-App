@@ -1,0 +1,31 @@
+CREATE TABLE Task (
+    id          INTEGER NOT NULL PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL,
+    color       TEXT NOT NULL,
+    startDate   TEXT NOT NULL,
+    endDate     TEXT NOT NULL
+);
+
+selectAll:
+SELECT * FROM Task;
+
+insert:
+INSERT INTO Task (name, description, color, startDate, endDate)
+VALUES (?, ?, ?, ?, ?);
+
+update:
+UPDATE Task
+SET
+    name        = COALESCE(?, name),
+    description = COALESCE(?, description),
+    color       = COALESCE(?, color),
+    startDate   = COALESCE(?, startDate),
+    endDate     = COALESCE(?, endDate)
+WHERE id = ?;
+
+lastInsertedId:
+SELECT last_insert_rowid();
+
+deleteById:
+DELETE FROM Task WHERE id = ?;

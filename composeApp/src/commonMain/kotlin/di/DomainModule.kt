@@ -1,5 +1,7 @@
 package di
 
+import domain.useCase.AddTaskUseCase
+import domain.useCase.EmitAllTasksUseCase
 import domain.useCase.EmitAppFocusStateUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
 import domain.useCase.EmitTimerFlowUseCase
@@ -84,6 +86,18 @@ val domainModule = module {
     factory {
         SetUserNameUseCase(
             dataStoreRepository = get(),
+        )
+    }
+
+    factory {
+        EmitAllTasksUseCase(
+            taskRepository = get(),
+        )
+    }
+
+    factory {
+        AddTaskUseCase(
+            taskRepository = get(),
         )
     }
 }

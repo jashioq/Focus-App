@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.mokkery)
+    alias(libs.plugins.sqlDelight)
 }
 
 kotlin {
@@ -25,6 +26,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            linkerOpts("-lsqlite3")
         }
     }
 
@@ -36,6 +38,7 @@ kotlin {
             implementation(libs.koin.androidx.compose)
             implementation(libs.androidx.startup.runtime)
             implementation(libs.lifecycle.process)
+            implementation(libs.sqldelight.android.driver)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -54,6 +57,10 @@ kotlin {
             api(libs.koin.core)
             api(libs.datastore.preferences)
             api(libs.datastore)
+            implementation(libs.sqldelight.coroutines)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native.driver)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -87,6 +94,14 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+sqldelight {
+    databases {
+        create("AppDatabase") {
+            packageName.set("com.jan.focus.database")
+        }
     }
 }
 

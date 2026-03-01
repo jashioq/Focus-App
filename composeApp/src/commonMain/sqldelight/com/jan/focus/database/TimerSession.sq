@@ -1,0 +1,16 @@
+CREATE TABLE TimerSession (
+    id        INTEGER NOT NULL PRIMARY KEY,
+    taskId    INTEGER NOT NULL REFERENCES Task(id) ON DELETE CASCADE,
+    startDate TEXT NOT NULL,
+    sequence  TEXT NOT NULL
+);
+
+selectByTaskId:
+SELECT * FROM TimerSession WHERE taskId = ?;
+
+insert:
+INSERT INTO TimerSession (taskId, startDate, sequence)
+VALUES (?, ?, ?);
+
+deleteByTaskId:
+DELETE FROM TimerSession WHERE taskId = ?;

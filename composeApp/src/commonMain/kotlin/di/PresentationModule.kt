@@ -1,5 +1,6 @@
 package di
 
+import domain.useCase.EmitAllTasksUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
 import domain.useCase.EmitUserNameUseCase
 import domain.useCase.EmitTimerFlowUseCase
@@ -21,6 +22,7 @@ val presentationModule = module {
     factory {
         CalendarScreenViewModel(
             emitUserNameUseCase = get<EmitUserNameUseCase>(),
+            emitAllTasksUseCase = get<EmitAllTasksUseCase>(),
         )
     }
 

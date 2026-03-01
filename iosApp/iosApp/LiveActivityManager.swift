@@ -39,7 +39,7 @@ import Foundation
         )
 
         if let existing = currentActivity {
-            Task {
+            _Concurrency.Task {
                 await existing.update(
                     ActivityContent(state: state, staleDate: staleDate)
                 )
@@ -61,7 +61,7 @@ import Foundation
 
     @objc public func stopActivity() {
         for activity in Activity<FocusActivityAttributes>.activities {
-            Task {
+            _Concurrency.Task {
                 await activity.end(nil, dismissalPolicy: .immediate)
             }
         }
@@ -117,7 +117,7 @@ import Foundation
     // MARK: - Dismissal observation
 
     private func observeDismissal(_ activity: Activity<FocusActivityAttributes>) {
-        Task {
+        _Concurrency.Task {
             for await state in activity.activityStateUpdates {
                 if state == .dismissed || state == .ended {
                     LiveActivityBridgeKt.notifyActivityDismissed()
