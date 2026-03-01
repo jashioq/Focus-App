@@ -122,6 +122,7 @@ fun CalendarScreenView(
             // true / false → button visible with frozen direction
             MorphTransition(
                 targetState = if (state.isOnCurrentMonth) null else frozenIsBeforeCurrent,
+                modifier = Modifier.size(58.dp),
                 morphScale = 1f,
                 blurRadius = 0.dp,
                 label = "backButton",
@@ -138,8 +139,7 @@ fun CalendarScreenView(
                         },
                     )
                 } else {
-                    // Placeholder keeps layout stable while button is absent
-                    Box(modifier = Modifier.size(56.dp))
+                    Box(modifier = Modifier.size(58.dp))
                 }
             }
         }
