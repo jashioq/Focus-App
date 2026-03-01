@@ -3,6 +3,8 @@ package di
 import domain.useCase.EmitAppFocusStateUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
 import domain.useCase.EmitTimerFlowUseCase
+import domain.useCase.EmitUserNameUseCase
+import domain.useCase.SetUserNameUseCase
 import domain.useCase.PauseTimerUseCase
 import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
@@ -70,6 +72,18 @@ val domainModule = module {
     factory {
         ExtendBlockUseCase(
             timerRepository = get(),
+        )
+    }
+
+    factory {
+        EmitUserNameUseCase(
+            dataStoreRepository = get(),
+        )
+    }
+
+    factory {
+        SetUserNameUseCase(
+            dataStoreRepository = get(),
         )
     }
 }

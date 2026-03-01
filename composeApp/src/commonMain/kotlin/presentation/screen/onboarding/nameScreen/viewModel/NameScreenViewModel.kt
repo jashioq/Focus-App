@@ -15,6 +15,7 @@ import util.Logger
  */
 class NameScreenViewModel(
     private val setOnboardingFinishedUseCase: UseCase<Boolean, Unit>,
+    private val setUserNameUseCase: UseCase<String, Unit>,
     scope: CoroutineScope? = null,
     logger: Logger? = null,
 ) : CoreViewModel<NameScreenState, NameScreenAction>(
@@ -36,6 +37,7 @@ class NameScreenViewModel(
 
             NameScreenAction.SaveName -> {
                 vmScope.launch {
+                    setUserNameUseCase.call(stateFlow.value.name)
                     setOnboardingFinishedUseCase.call(true)
                 }
             }

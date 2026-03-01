@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package presentation.screen.calendar
 
 import androidx.compose.foundation.background
@@ -35,8 +37,12 @@ import com.kizitonwose.calendar.core.minusMonths
 import com.kizitonwose.calendar.core.plusMonths
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.toLocalDateTime
 import presentation.compose.component.button.CurrentMonthButton
+import presentation.compose.component.text.ReactiveSizeText
 import presentation.compose.component.transition.MorphTransition
 
 @Composable
@@ -84,12 +90,34 @@ fun CalendarScreenView(
             .statusBarsPadding()
             .padding(horizontal = 16.dp),
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
-            contentAlignment = Alignment.CenterEnd,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            val hour = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).hour
+            val salutation = when {
+                hour < 12 -> "Good morning"
+                hour < 17 -> "Good afternoon"
+                else -> "Good evening"
+            }
+            val greetingText = if (state.userName.isBlank()) {
+                "$salutation!"
+            } else {
+                "$salutation ${state.userName}!"
+            }
+
+            ReactiveSizeText(
+                text = greetingText,
+                maxFontSize = 18.sp,
+                maxLines = 1,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .weight(1f),
+            )
+
             // null  → button hidden (morphs out/in)
             // true / false → button visible with frozen direction
             MorphTransition(

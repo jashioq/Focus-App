@@ -1,10 +1,12 @@
 package di
 
 import domain.useCase.EmitOnboardingFinishedUseCase
+import domain.useCase.EmitUserNameUseCase
 import domain.useCase.EmitTimerFlowUseCase
 import domain.useCase.PauseTimerUseCase
 import domain.useCase.ResumeTimerUseCase
 import domain.useCase.SetOnboardingFinishedUseCase
+import domain.useCase.SetUserNameUseCase
 import domain.useCase.StartTimerUseCase
 import domain.useCase.ExtendBlockUseCase
 import domain.useCase.SkipBlockUseCase
@@ -17,12 +19,15 @@ import presentation.screen.onboarding.nameScreen.viewModel.NameScreenViewModel
 
 val presentationModule = module {
     factory {
-        CalendarScreenViewModel()
+        CalendarScreenViewModel(
+            emitUserNameUseCase = get<EmitUserNameUseCase>(),
+        )
     }
 
     factory {
         NameScreenViewModel(
             setOnboardingFinishedUseCase = get<SetOnboardingFinishedUseCase>(),
+            setUserNameUseCase = get<SetUserNameUseCase>(),
         )
     }
 
