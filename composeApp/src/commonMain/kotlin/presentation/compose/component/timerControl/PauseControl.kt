@@ -49,6 +49,7 @@ import focus.composeapp.generated.resources.ic_play
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 import presentation.compose.component.border.tiltBorder
+import presentation.compose.component.transition.MorphTransition
 
 // region Configuration
 

@@ -5,7 +5,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import presentation.compose.component.button.SpringButton
 import presentation.compose.component.text.TimerText
-import presentation.compose.component.timerControl.MorphTransition
+import presentation.compose.component.transition.MorphTransition
 import kotlin.math.asin
 import kotlin.math.min
 

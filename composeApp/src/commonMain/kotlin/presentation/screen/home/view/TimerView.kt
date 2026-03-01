@@ -44,7 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.util.lerp
 import presentation.compose.component.ring.FocusTimerRing
-import presentation.compose.component.timerControl.MorphTransition
+import presentation.compose.component.transition.MorphTransition
 import presentation.compose.component.timerControl.TimerControls
 
 private const val IdleTimeoutMs = 5_000L

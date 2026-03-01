@@ -1,7 +1,5 @@
 package presentation.screen.calendar
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,19 +8,20 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +36,8 @@ import com.kizitonwose.calendar.core.plusMonths
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.datetime.YearMonth
+import presentation.compose.component.button.CurrentMonthButton
+import presentation.compose.component.transition.MorphTransition
 
 @Composable
 fun CalendarScreenView(
@@ -64,11 +65,17 @@ fun CalendarScreenView(
             }
     }
 
-    val backButtonAlpha by animateFloatAsState(
-        targetValue = if (state.isOnCurrentMonth) 0f else 1f,
-        animationSpec = tween(durationMillis = 500),
-        label = "backButtonAlpha",
-    )
+    // Live direction derived from the currently visible month
+    val liveIsBeforeCurrent: Boolean = calendarState.firstVisibleMonth.yearMonth < currentMonth
+
+    // Frozen direction: only updated while button is visible so the icon doesn't
+    // flip mid-animation when the calendar scrolls back to the current month
+    var frozenIsBeforeCurrent by remember { mutableStateOf<Boolean>(liveIsBeforeCurrent) }
+    LaunchedEffect(liveIsBeforeCurrent, state.isOnCurrentMonth) {
+        if (!state.isOnCurrentMonth) {
+            frozenIsBeforeCurrent = liveIsBeforeCurrent
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -77,20 +84,36 @@ fun CalendarScreenView(
             .statusBarsPadding()
             .padding(horizontal = 16.dp),
     ) {
-        Button(
-            onClick = {
-                onScrollToCurrentMonth()
-                coroutineScope.launch {
-                    calendarState.animateScrollToMonth(currentMonth)
-                }
-            },
-            enabled = !state.isOnCurrentMonth,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .graphicsLayer { alpha = backButtonAlpha },
+                .padding(bottom = 8.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Text(text = "Back to current month")
+            // null  → button hidden (morphs out/in)
+            // true / false → button visible with frozen direction
+            MorphTransition(
+                targetState = if (state.isOnCurrentMonth) null else frozenIsBeforeCurrent,
+                morphScale = 1f,
+                blurRadius = 0.dp,
+                label = "backButton",
+            ) { isBeforeCurrent ->
+                if (isBeforeCurrent != null) {
+                    CurrentMonthButton(
+                        modifier = Modifier.padding(1.dp),
+                        isBeforeCurrent = isBeforeCurrent,
+                        onClick = {
+                            onScrollToCurrentMonth()
+                            coroutineScope.launch {
+                                calendarState.animateScrollToMonth(currentMonth)
+                            }
+                        },
+                    )
+                } else {
+                    // Placeholder keeps layout stable while button is absent
+                    Box(modifier = Modifier.size(56.dp))
+                }
+            }
         }
 
         HorizontalCalendar(

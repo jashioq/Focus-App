@@ -2,6 +2,7 @@ package presentation.compose.component.text
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -13,7 +14,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import presentation.compose.component.timerControl.MorphTransition
+import presentation.compose.component.transition.MorphTransition
 
 private const val DefaultMorphDurationMs = 300
 private const val DefaultMorphScale = 1.5f
@@ -44,7 +45,7 @@ fun MorphText(
                     blurRadius = morphBlurRadius,
                     label = "morphChar$index",
                 ) { targetChar ->
-                    androidx.compose.material3.Text(
+                    Text(
                         text = targetChar.toString(),
                         style = TextStyle(
                             color = color,

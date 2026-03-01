@@ -1,4 +1,4 @@
-package presentation.compose.component.timerControl
+package presentation.compose.component.transition
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterExitState
