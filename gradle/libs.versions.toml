@@ -22,6 +22,7 @@ startupRuntime = "1.1.1"
 uiAndroid = "1.7.8"
 material3Android = "1.3.1"
 mokkery = "2.7.2"
+kizitonwoseCalendar = "2.10.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -40,6 +41,7 @@ androidx-startup-runtime = { module = "androidx.startup:startup-runtime", versio
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
 lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
+calendar-compose-multiplatform = { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "kizitonwoseCalendar" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

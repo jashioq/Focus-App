@@ -12,7 +12,9 @@
       "Bash(ls:*)",
       "Bash(find:*)",
       "Bash(./gradlew compileKotlinIosArm64:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
