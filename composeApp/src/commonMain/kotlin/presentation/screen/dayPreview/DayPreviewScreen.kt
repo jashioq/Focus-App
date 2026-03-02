@@ -18,5 +18,8 @@ fun DayPreviewScreen(
     }
     val state by viewModel.state.collectAsState()
 
-    DayPreviewScreenView(state = state)
+    DayPreviewScreenView(
+        state = state,
+        onAddTaskClicked = { viewModel.sendAction(DayPreviewScreenAction.AddTaskClicked) },
+    )
 }

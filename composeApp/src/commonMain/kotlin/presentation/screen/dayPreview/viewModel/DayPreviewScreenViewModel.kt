@@ -15,5 +15,9 @@ class DayPreviewScreenViewModel(
     scope = scope,
     logger = logger,
 ) {
-    override fun DayPreviewScreenAction.process() {}
+    override fun DayPreviewScreenAction.process() {
+        when (this) {
+            DayPreviewScreenAction.AddTaskClicked -> Unit
+        }
+    }
 }
