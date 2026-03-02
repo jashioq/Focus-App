@@ -3,6 +3,7 @@
 package presentation.screen.calendar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ fun CalendarScreenView(
     state: CalendarScreenState,
     onVisibleMonthChanged: (YearMonth) -> Unit,
     onScrollToCurrentMonth: () -> Unit,
+    onDaySelected: (String) -> Unit,
 ) {
     val currentMonth = state.currentMonth
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
@@ -152,7 +154,7 @@ fun CalendarScreenView(
                 MonthHeader(month.yearMonth)
             },
             dayContent = { day ->
-                Day(day, today)
+                Day(day, today, onDaySelected)
             },
         )
     }
@@ -192,11 +194,13 @@ private fun DaysOfWeekHeader() {
 }
 
 @Composable
-private fun Day(day: CalendarDay, today: LocalDate) {
+private fun Day(day: CalendarDay, today: LocalDate, onDaySelected: (String) -> Unit) {
     val isCurrentMonth = day.position == DayPosition.MonthDate
     val isToday = day.date == today
     Box(
-        modifier = Modifier.aspectRatio(1f),
+        modifier = Modifier
+            .aspectRatio(1f)
+            .clickable(enabled = isCurrentMonth) { onDaySelected(day.date.toString()) },
         contentAlignment = Alignment.Center,
     ) {
         if (isToday) {

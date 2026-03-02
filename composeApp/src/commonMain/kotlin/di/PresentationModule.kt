@@ -16,6 +16,7 @@ import domain.useCase.StopTimerUseCase
 import navigation.viewModel.NavigationViewModel
 import org.koin.dsl.module
 import presentation.screen.calendar.viewModel.CalendarScreenViewModel
+import presentation.screen.newTask.viewModel.NewTaskScreenViewModel
 import presentation.screen.home.viewModel.HomeScreenViewModel
 import presentation.screen.onboarding.nameScreen.viewModel.NameScreenViewModel
 
@@ -39,6 +40,10 @@ val presentationModule = module {
         NavigationViewModel(
             emitOnboardingFinishedUseCase = get<EmitOnboardingFinishedUseCase>(),
         )
+    }
+
+    factory { params ->
+        NewTaskScreenViewModel(date = params.get())
     }
 
     factory {

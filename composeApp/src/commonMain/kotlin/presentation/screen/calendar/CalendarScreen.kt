@@ -8,6 +8,7 @@ import presentation.util.koinViewModel
 
 @Composable
 fun CalendarScreen(
+    onNavigateToNewTask: (String) -> Unit,
     viewModel: CalendarScreenViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -20,5 +21,6 @@ fun CalendarScreen(
         onScrollToCurrentMonth = {
             viewModel.sendAction(CalendarScreenAction.ScrollToCurrentMonth)
         },
+        onDaySelected = onNavigateToNewTask,
     )
 }
