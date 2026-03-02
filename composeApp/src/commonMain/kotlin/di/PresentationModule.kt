@@ -1,5 +1,6 @@
 package di
 
+import domain.useCase.AddTaskUseCase
 import domain.useCase.EmitAllTasksUseCase
 import domain.useCase.EmitOnboardingFinishedUseCase
 import domain.useCase.EmitUserNameUseCase
@@ -23,6 +24,7 @@ val presentationModule = module {
         CalendarScreenViewModel(
             emitUserNameUseCase = get<EmitUserNameUseCase>(),
             emitAllTasksUseCase = get<EmitAllTasksUseCase>(),
+            addTaskUseCase = get<AddTaskUseCase>(),
         )
     }
 

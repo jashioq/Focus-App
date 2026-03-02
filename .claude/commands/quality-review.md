@@ -2,7 +2,7 @@ Perform a code quality analysis starting from: $ARGUMENTS
 
 ## How to explore the code
 
-Start with the entry points specified above. For each component you encounter, follow it one level deeper — from screen into viewmodel, viewmodel into usecases, usecases into repositories. Stop at the repository implementation level. Do not go into datasources or platform-specific code. Stay within the shared module.
+Start with the entry points specified above. For each component you encounter, follow it one level deeper — from screen into viewmodel, viewmodel into usecases, usecases into repositories. Do not leave the project, stop at the datasource (platform implementations if applicable) level.
 
 ## Analysis steps (repeat for each component)
 

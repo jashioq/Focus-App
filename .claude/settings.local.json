@@ -14,7 +14,8 @@
       "Bash(./gradlew compileKotlinIosArm64:*)",
       "Bash(./gradlew:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep -l \"TaskRepository\" /Users/jan.wylegala/Focus-App/composeApp/src/commonMain/kotlin/domain/usecase/*.kt)"
     ]
   }
 }

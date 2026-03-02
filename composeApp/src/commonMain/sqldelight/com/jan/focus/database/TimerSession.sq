@@ -5,6 +5,9 @@ CREATE TABLE TimerSession (
     sequence  TEXT NOT NULL
 );
 
+selectAll:
+SELECT * FROM TimerSession;
+
 selectByTaskId:
 SELECT * FROM TimerSession WHERE taskId = ?;
 

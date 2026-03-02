@@ -3,9 +3,9 @@ package presentation.screen.home.viewModel
 import domain.model.Timer
 import domain.model.TimerBlock
 import domain.model.TimerMode
+import domain.util.StreamUseCase
 import domain.util.UseCase
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import presentation.screen.home.HomeScreenAction
@@ -18,7 +18,7 @@ class HomeScreenViewModel(
     private val stopTimerUseCase: UseCase<Unit, Unit>,
     private val pauseTimerUseCase: UseCase<Unit, Unit>,
     private val resumeTimerUseCase: UseCase<Unit, Unit>,
-    private val emitTimerFlowUseCase: UseCase<Unit, Flow<Timer?>>,
+    private val emitTimerFlowUseCase: StreamUseCase<Unit, Timer?>,
     private val skipBlockUseCase: UseCase<Unit, Unit>,
     private val extendBlockUseCase: UseCase<Int, Unit>,
     scope: CoroutineScope? = null,
@@ -38,50 +38,48 @@ class HomeScreenViewModel(
 
     init {
         vmScope.launch {
-            emitTimerFlowUseCase.call(Unit).onSuccess { flow ->
-                flow.collect { timer ->
-                    if (timer == null) {
-                        stateFlow.update { HomeScreenState() }
-                        return@collect
-                    }
+            emitTimerFlowUseCase.stream(Unit).collect { timer ->
+                if (timer == null) {
+                    stateFlow.update { HomeScreenState() }
+                    return@collect
+                }
 
-                    val position = timer.getCurrentBlock()
-                        ?: return@collect stateFlow.update { HomeScreenState() }
+                val position = timer.getCurrentBlock()
+                    ?: return@collect stateFlow.update { HomeScreenState() }
 
-                    val remaining = position.block.seconds - position.secondsInBlock
-                    val m = remaining / 60
-                    val s = remaining % 60
-                    val timerText = "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
+                val remaining = position.block.seconds - position.secondsInBlock
+                val m = remaining / 60
+                val s = remaining % 60
+                val timerText = "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
 
-                    val blockProgress = if (position.block.seconds > 0) {
-                        ((position.secondsInBlock + 1).toFloat() / position.block.seconds.toFloat()).coerceIn(0f, 1f)
-                    } else {
-                        0f
-                    }
-                    val progress = when (position.block.mode) {
-                        TimerMode.FOCUS -> blockProgress
-                        TimerMode.BREAK -> 1f - blockProgress
-                    }
+                val blockProgress = if (position.block.seconds > 0) {
+                    ((position.secondsInBlock + 1).toFloat() / position.block.seconds.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                val progress = when (position.block.mode) {
+                    TimerMode.FOCUS -> blockProgress
+                    TimerMode.BREAK -> 1f - blockProgress
+                }
 
-                    val blockLabel = when (position.block.mode) {
-                        TimerMode.FOCUS -> "Focus"
-                        TimerMode.BREAK -> "Break"
-                    }
+                val blockLabel = when (position.block.mode) {
+                    TimerMode.FOCUS -> "Focus"
+                    TimerMode.BREAK -> "Break"
+                }
 
-                    stateFlow.update { current ->
-                        val blockChanged = current.isRunning && current.blockLabel != blockLabel
-                        val extendPressCount = if (blockChanged) 0 else current.extendPressCount
+                stateFlow.update { current ->
+                    val blockChanged = current.isRunning && current.blockLabel != blockLabel
+                    val extendPressCount = if (blockChanged) 0 else current.extendPressCount
 
-                        HomeScreenState(
-                            timerText = timerText,
-                            isRunning = true,
-                            isPaused = timer.isPaused,
-                            progress = progress,
-                            blockLabel = blockLabel,
-                            extendPressCount = extendPressCount,
-                            addButtonText = addButtonText(extendPressCount, blockLabel),
-                        )
-                    }
+                    HomeScreenState(
+                        timerText = timerText,
+                        isRunning = true,
+                        isPaused = timer.isPaused,
+                        progress = progress,
+                        blockLabel = blockLabel,
+                        extendPressCount = extendPressCount,
+                        addButtonText = addButtonText(extendPressCount, blockLabel),
+                    )
                 }
             }
         }
