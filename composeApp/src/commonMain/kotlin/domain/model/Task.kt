@@ -8,4 +8,7 @@ data class Task(
     val startDate: String,
     val endDate: String,
     val timerSessions: List<TimerSession> = emptyList(),
-)
+) {
+    val totalFocusSeconds: Int
+        get() = timerSessions.sumOf { it.totalFocusSeconds }
+}

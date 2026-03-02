@@ -40,6 +40,7 @@ class TaskRepository(
                         taskId = taskId,
                         startDate = session.startDate,
                         sequence = Json.encodeToString(session.sequence),
+                        secondsCompleted = session.secondsCompleted.toLong(),
                     )
                 }
             }
@@ -69,6 +70,7 @@ class TaskRepository(
                         taskId = id,
                         startDate = session.startDate,
                         sequence = Json.encodeToString(session.sequence),
+                        secondsCompleted = session.secondsCompleted.toLong(),
                     )
                 }
             }
@@ -90,6 +92,7 @@ class TaskRepository(
                 taskId = s.taskId,
                 startDate = s.startDate,
                 sequence = Json.decodeFromString<List<TimerBlock>>(s.sequence),
+                secondsCompleted = s.secondsCompleted.toInt(),
             )
         },
     )
