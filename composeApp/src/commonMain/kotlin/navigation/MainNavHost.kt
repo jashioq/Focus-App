@@ -7,10 +7,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import presentation.screen.calendar.CalendarScreen
 import presentation.screen.calendar.CalendarScreenDestination
+import presentation.screen.dayPreview.DayPreviewScreen
+import presentation.screen.dayPreview.DayPreviewScreenDestination
 import presentation.screen.home.HomeScreen
 import presentation.screen.home.HomeScreenDestination
-import presentation.screen.newTask.NewTaskScreen
-import presentation.screen.newTask.NewTaskScreenDestination
 
 @Composable
 fun MainNavHost() {
@@ -22,16 +22,16 @@ fun MainNavHost() {
         composable<CalendarScreenDestination> {
             CalendarScreen(
                 onNavigateToNewTask = { date ->
-                    navController.navigate(NewTaskScreenDestination(date = date))
+                    navController.navigate(DayPreviewScreenDestination(date = date))
                 },
             )
         }
         composable<HomeScreenDestination> {
             HomeScreen()
         }
-        composable<NewTaskScreenDestination> { backStackEntry ->
-            val destination: NewTaskScreenDestination = backStackEntry.toRoute()
-            NewTaskScreen(date = destination.date)
+        composable<DayPreviewScreenDestination> { backStackEntry ->
+            val destination: DayPreviewScreenDestination = backStackEntry.toRoute()
+            DayPreviewScreen(date = destination.date)
         }
     }
 }

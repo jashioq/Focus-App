@@ -1,4 +1,4 @@
-package presentation.screen.newTask
+package presentation.screen.dayPreview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,8 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun NewTaskScreenView(
-    state: NewTaskScreenState,
+fun DayPreviewScreenView(
+    state: DayPreviewScreenState,
 ) {
     Box(
         modifier = Modifier

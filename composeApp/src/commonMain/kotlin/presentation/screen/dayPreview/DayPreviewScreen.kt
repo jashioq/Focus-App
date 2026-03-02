@@ -1,4 +1,4 @@
-package presentation.screen.newTask
+package presentation.screen.dayPreview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -6,17 +6,17 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.compose.currentKoinScope
 import org.koin.core.parameter.parametersOf
-import presentation.screen.newTask.viewModel.NewTaskScreenViewModel
+import presentation.screen.dayPreview.viewModel.DayPreviewScreenViewModel
 
 @Composable
-fun NewTaskScreen(
+fun DayPreviewScreen(
     date: String,
 ) {
     val scope = currentKoinScope()
-    val viewModel: NewTaskScreenViewModel = viewModel {
-        scope.get<NewTaskScreenViewModel>(parameters = { parametersOf(date) })
+    val viewModel: DayPreviewScreenViewModel = viewModel {
+        scope.get<DayPreviewScreenViewModel>(parameters = { parametersOf(date) })
     }
     val state by viewModel.state.collectAsState()
 
-    NewTaskScreenView(state = state)
+    DayPreviewScreenView(state = state)
 }
