@@ -9,7 +9,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +27,7 @@ import presentation.compose.component.border.tiltBorder
 
 private const val GlowIntensity = 0.6f
 private val GlowRadius = 20.dp
+private val ButtonShape = RoundedCornerShape(32.dp)
 
 @Composable
 fun CircleGlassButton(
@@ -59,9 +60,9 @@ fun CircleGlassButton(
                 color = primaryColor,
                 thickness = 1.dp,
                 upperAlpha = 0.5f,
-                shape = CircleShape,
+                shape = ButtonShape,
             )
-            .clip(CircleShape)
+            .clip(ButtonShape)
             .background(Color.White.copy(alpha = 0.09f))
             .clickable(
                 indication = null,
@@ -74,7 +75,7 @@ fun CircleGlassButton(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .clip(CircleShape),
+                .clip(ButtonShape),
         ) {
             Box(
                 modifier = Modifier

@@ -7,7 +7,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -35,6 +33,8 @@ import focus.composeapp.generated.resources.circle_arrow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import presentation.compose.component.border.tiltBorder
+
+private val BoxShape = RoundedCornerShape(32.dp)
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -57,17 +57,6 @@ fun NewTaskScreenView(
         }
     }
 
-    val cornerRadius by animatedVisibilityScope.transition.animateFloat(
-        label = "cornerRadius",
-        transitionSpec = { tween(durationMillis = 400, easing = FastOutSlowInEasing) },
-    ) { state ->
-        when (state) {
-            EnterExitState.PreEnter, EnterExitState.PostExit -> 1000f
-            EnterExitState.Visible -> 32f
-        }
-    }
-    val shape = RoundedCornerShape(cornerRadius.dp)
-
     val handleBack = {
         scope.launch {
             contentAlpha.animateTo(0f, animationSpec = tween(200))
@@ -89,7 +78,7 @@ fun NewTaskScreenView(
                     .sharedBounds(
                         sharedContentState = rememberSharedContentState(key = "add-task-glass"),
                         animatedVisibilityScope = animatedVisibilityScope,
-                        clipInOverlayDuringTransition = OverlayClip(shape),
+                        clipInOverlayDuringTransition = OverlayClip(BoxShape),
                         resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                         enter = EnterTransition.None,
                         boundsTransform = { _, _ ->
@@ -100,9 +89,9 @@ fun NewTaskScreenView(
                         color = primaryColor,
                         thickness = 1.dp,
                         upperAlpha = 0.5f,
-                        shape = shape,
+                        shape = BoxShape,
                     )
-                    .clip(shape)
+                    .clip(BoxShape)
                     .background(Color.White.copy(alpha = 0.09f)),
             )
         }

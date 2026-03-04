@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,7 +53,7 @@ fun DayPreviewScreenView(
                     .sharedBounds(
                         sharedContentState = rememberSharedContentState(key = "add-task-glass"),
                         animatedVisibilityScope = animatedVisibilityScope,
-                        clipInOverlayDuringTransition = OverlayClip(CircleShape),
+                        clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(32.dp)),
                         resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                         boundsTransform = { _, _ ->
                             tween(durationMillis = 400, easing = FastOutSlowInEasing)

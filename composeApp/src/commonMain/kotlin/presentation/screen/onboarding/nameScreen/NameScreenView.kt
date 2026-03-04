@@ -43,7 +43,7 @@ fun NameScreenView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp)
+            .padding(horizontal = 32.dp, vertical = 32.dp)
             .pointerInput(Unit) {
                 detectTapGestures {
                     keyboardController?.hide()
