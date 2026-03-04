@@ -1,5 +1,8 @@
 package presentation.screen.dayPreview
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -8,9 +11,13 @@ import org.koin.compose.currentKoinScope
 import org.koin.core.parameter.parametersOf
 import presentation.screen.dayPreview.viewModel.DayPreviewScreenViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DayPreviewScreen(
     date: String,
+    onNavigateToNewTask: (String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     val scope = currentKoinScope()
     val viewModel: DayPreviewScreenViewModel = viewModel {
@@ -20,6 +27,8 @@ fun DayPreviewScreen(
 
     DayPreviewScreenView(
         state = state,
-        onAddTaskClicked = { viewModel.sendAction(DayPreviewScreenAction.AddTaskClicked) },
+        onAddTaskClicked = { onNavigateToNewTask(state.date) },
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope,
     )
 }

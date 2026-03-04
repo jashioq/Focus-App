@@ -1,10 +1,14 @@
 package presentation.screen.dayPreview
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,10 +21,13 @@ import focus.composeapp.generated.resources.ic_add
 import org.jetbrains.compose.resources.painterResource
 import presentation.compose.component.button.CircleGlassButton
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DayPreviewScreenView(
     state: DayPreviewScreenState,
     onAddTaskClicked: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     Box(
         modifier = Modifier
@@ -34,18 +41,26 @@ fun DayPreviewScreenView(
             color = MaterialTheme.colorScheme.onBackground,
         )
 
-        CircleGlassButton(
-            onClick = onAddTaskClicked,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp),
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_add),
-                contentDescription = "Add task",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp),
-            )
+        with(sharedTransitionScope) {
+            CircleGlassButton(
+                onClick = onAddTaskClicked,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 16.dp)
+                    .sharedBounds(
+                        sharedContentState = rememberSharedContentState(key = "add-task-glass"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        clipInOverlayDuringTransition = OverlayClip(CircleShape),
+                        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                    ),
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_add),
+                    contentDescription = "Add task",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         }
     }
 }
