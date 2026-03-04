@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -200,6 +201,7 @@ private fun Day(day: CalendarDay, today: LocalDate, onDaySelected: (String) -> U
     Box(
         modifier = Modifier
             .aspectRatio(1f)
+            .clip(CircleShape)
             .clickable(enabled = isCurrentMonth) { onDaySelected(day.date.toString()) },
         contentAlignment = Alignment.Center,
     ) {
