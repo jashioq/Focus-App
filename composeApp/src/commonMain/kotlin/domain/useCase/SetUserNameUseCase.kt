@@ -10,6 +10,6 @@ open class SetUserNameUseCase(
     override suspend fun call(value: String): Result<Unit> =
         dataStoreRepository.putStringPreference(
             key = USER_NAME_KEY,
-            value = value,
+            value = value.trim(),
         )
 }
