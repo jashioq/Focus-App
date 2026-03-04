@@ -55,6 +55,7 @@ fun MainNavHost() {
                 val destination: NewTaskScreenDestination = backStackEntry.toRoute()
                 NewTaskScreen(
                     date = destination.date,
+                    onBack = { navController.popBackStack() },
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedVisibilityScope = this,
                 )

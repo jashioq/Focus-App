@@ -9,11 +9,13 @@ import androidx.compose.runtime.Composable
 @Composable
 fun NewTaskScreen(
     date: String,
+    onBack: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     NewTaskScreenView(
         date = date,
+        onBack = onBack,
         sharedTransitionScope = sharedTransitionScope,
         animatedVisibilityScope = animatedVisibilityScope,
     )

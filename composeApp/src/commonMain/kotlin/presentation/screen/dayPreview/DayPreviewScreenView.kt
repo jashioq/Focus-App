@@ -3,6 +3,8 @@ package presentation.screen.dayPreview
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +46,7 @@ fun DayPreviewScreenView(
         with(sharedTransitionScope) {
             CircleGlassButton(
                 onClick = onAddTaskClicked,
+                showGlow = false,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 16.dp, end = 16.dp)
@@ -52,6 +55,9 @@ fun DayPreviewScreenView(
                         animatedVisibilityScope = animatedVisibilityScope,
                         clipInOverlayDuringTransition = OverlayClip(CircleShape),
                         resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                        boundsTransform = { _, _ ->
+                            tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                        },
                     ),
             ) {
                 Icon(

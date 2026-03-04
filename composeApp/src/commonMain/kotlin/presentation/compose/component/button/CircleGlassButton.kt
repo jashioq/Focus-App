@@ -32,6 +32,7 @@ private val GlowRadius = 20.dp
 fun CircleGlassButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showGlow: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -41,7 +42,7 @@ fun CircleGlassButton(
     LaunchedEffect(interactionSource) {
         val scope = this
         interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press) {
+            if (interaction is PressInteraction.Press && showGlow) {
                 scope.launch {
                     glowAlpha.snapTo(0f)
                     glowAlpha.animateTo(1f, animationSpec = tween(150))
