@@ -40,6 +40,11 @@ import androidx.compose.ui.unit.dp
 import focus.composeapp.generated.resources.Res
 import focus.composeapp.generated.resources.circle_arrow
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import presentation.compose.PlatformBackHandler
 import presentation.compose.component.border.tiltBorder
@@ -71,6 +76,9 @@ fun NewTaskScreenView(
 
     var taskName by remember { mutableStateOf("") }
     var taskDescription by remember { mutableStateOf("") }
+
+    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    val defaultDeadline = remember(today) { today.plus(7, DateTimeUnit.DAY) }
 
     val isNextEnabled = currentPage != 0 || taskName.isNotBlank()
 
@@ -181,7 +189,12 @@ fun NewTaskScreenView(
                         onDescriptionChange = { taskDescription = it },
                     )
                 }
-                page { ScheduleView() }
+                page {
+                    ScheduleView(
+                        defaultStartDate = today,
+                        defaultDeadline = defaultDeadline,
+                    )
+                }
                 page { SessionsView() }
                 page { ConfirmationView() }
             }
