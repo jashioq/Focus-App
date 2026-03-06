@@ -9,18 +9,13 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -41,8 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import focus.composeapp.generated.resources.Res
 import focus.composeapp.generated.resources.circle_arrow
@@ -51,11 +44,12 @@ import org.jetbrains.compose.resources.painterResource
 import presentation.compose.PlatformBackHandler
 import presentation.compose.component.border.tiltBorder
 import presentation.compose.component.button.PrimaryButton
+import presentation.compose.component.pager.HorizontalCarousel
+import presentation.compose.component.pager.PageIndicator
 import presentation.screen.newTask.view.ConfirmationView
 import presentation.screen.newTask.view.NameDescriptionView
 import presentation.screen.newTask.view.ScheduleView
 import presentation.screen.newTask.view.SessionsView
-import kotlin.math.roundToInt
 
 private val BoxShape = RoundedCornerShape(32.dp)
 private const val PAGE_COUNT = 4
@@ -80,8 +74,6 @@ fun NewTaskScreenView(
 
     val isNextEnabled = currentPage != 0 || taskName.isNotBlank()
 
-    val slideOffset = remember { Animatable(0f) }
-
     val isEnterComplete = !animatedVisibilityScope.transition.isRunning &&
         animatedVisibilityScope.transition.currentState == EnterExitState.Visible
 
@@ -91,28 +83,8 @@ fun NewTaskScreenView(
         }
     }
 
-    val navigateTo: (Int) -> Unit = { targetPage ->
-        scope.launch {
-            val direction = if (targetPage > currentPage) 1f else -1f
-            slideOffset.animateTo(
-                direction * -1f,
-                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            )
-            currentPage = targetPage
-            slideOffset.snapTo(direction * 1f)
-            slideOffset.animateTo(
-                0f,
-                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
-            )
-        }
-    }
-
     val handleBack = {
-        if (currentPage > 0) {
-            navigateTo(currentPage - 1)
-        } else {
-            showDiscardDialog = true
-        }
+        if (currentPage > 0) currentPage-- else showDiscardDialog = true
     }
 
     val doClose = {
@@ -194,24 +166,24 @@ fun NewTaskScreenView(
                 )
             }
 
-            CarouselPage(
-                slideOffset = slideOffset.value,
+            HorizontalCarousel(
+                selectedPage = currentPage,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 64.dp, bottom = 120.dp)
                     .padding(horizontal = 24.dp),
             ) {
-                when (currentPage) {
-                    0 -> NameDescriptionView(
+                page {
+                    NameDescriptionView(
                         name = taskName,
                         description = taskDescription,
                         onNameChange = { taskName = it },
                         onDescriptionChange = { taskDescription = it },
                     )
-                    1 -> ScheduleView()
-                    2 -> SessionsView()
-                    3 -> ConfirmationView()
                 }
+                page { ScheduleView() }
+                page { SessionsView() }
+                page { ConfirmationView() }
             }
 
             Column(
@@ -221,7 +193,7 @@ fun NewTaskScreenView(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                PageDots(currentPage = currentPage, pageCount = PAGE_COUNT)
+                PageIndicator(currentPage = currentPage, pageCount = PAGE_COUNT)
 
                 Spacer(Modifier.height(24.dp))
                 if (currentPage == PAGE_COUNT - 1) {
@@ -233,59 +205,10 @@ fun NewTaskScreenView(
                     PrimaryButton(
                         text = "Next",
                         isEnabled = isNextEnabled,
-                        onClick = { navigateTo(currentPage + 1) },
+                        onClick = { currentPage++ },
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun CarouselPage(
-    slideOffset: Float,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Box(modifier = modifier) {
-        OffsetContent(slideOffset = slideOffset, content = content)
-    }
-}
-
-@Composable
-private fun OffsetContent(
-    slideOffset: Float,
-    content: @Composable () -> Unit,
-) {
-    androidx.compose.foundation.layout.BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val widthPx = with(LocalDensity.current) { maxWidth.toPx() }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset { IntOffset(x = (slideOffset * widthPx).roundToInt(), y = 0) },
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun PageDots(currentPage: Int, pageCount: Int) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        repeat(pageCount) { index ->
-            val filled = index == currentPage
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (filled) MaterialTheme.colorScheme.onBackground
-                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.25f),
-                    ),
-            )
         }
     }
 }
