@@ -1,15 +1,14 @@
 package presentation.compose.component.wheelPicker
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.ScrollScope
-import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -18,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -25,13 +25,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
-import kotlin.math.pow
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.sign
 
-// Ease-out fling curve: aggressive braking at high speeds, gentle at low speeds.
-// Normalized so flingVelocityMultiplier keeps the same meaning at ~3000 px/s as it would linearly.
-private const val FLING_CURVE_EXPONENT = 0.7f
-private val FLING_NORM_FACTOR = 3000f.pow(1f - FLING_CURVE_EXPONENT)
+// Constant deceleration rate in px/s². Faster flings travel proportionally longer.
+private const val DECEL_RATE = 2500f
+
+// Speed (px/s) at which Phase 1 ends and the snap curve begins.
+// Higher values = snap curve starts faster = shorter snap duration.
+// 250px/s keeps snap duration roughly equal to the old coast+decel approach.
+private const val SNAP_VELOCITY = 250f
+
+// Fraction of SNAP_VELOCITY lost in the FIRST half of the snap curve's time.
+// 0.8 means 80% of speed is gone by midpoint, leaving a gentle tail.
+private const val SNAP_STEEP_FRACTION = 0.75f
 
 @Composable
 internal fun WheelColumnPicker(
@@ -49,15 +57,88 @@ internal fun WheelColumnPicker(
     val contentPadding = itemHeight * ((visibleItemCount - 1) / 2)
 
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = safeInitialIndex)
-    val snapFling = rememberSnapFlingBehavior(remember(listState) { SnapLayoutInfoProvider(listState) })
-    val flingBehavior = remember(snapFling, flingVelocityMultiplier) {
+    val flingBehavior = remember(listState, flingVelocityMultiplier) {
         object : FlingBehavior {
             override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
-                val scaledV = sign(initialVelocity) *
-                    abs(initialVelocity).pow(FLING_CURVE_EXPONENT) *
-                    FLING_NORM_FACTOR *
-                    flingVelocityMultiplier
-                return with(snapFling) { performFling(scaledV) }
+                val scaledVelocity = initialVelocity * flingVelocityMultiplier
+                if (abs(scaledVelocity) <= SNAP_VELOCITY) return 0f
+
+                val itemSizePx = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat()
+                    ?: return 0f
+
+                val direction = sign(scaledVelocity)
+                var velocity = scaledVelocity
+
+                var prevNanos = 0L
+                withFrameNanos { prevNanos = it }
+
+                // Phase 1: Constant deceleration until snap velocity
+                while (abs(velocity) > SNAP_VELOCITY) {
+                    var currNanos = 0L
+                    withFrameNanos { currNanos = it }
+                    val dt = ((currNanos - prevNanos) / 1_000_000_000f).coerceAtMost(0.05f)
+                    prevNanos = currNanos
+
+                    val moved = scrollBy(velocity * dt)
+                    if (moved == 0f && abs(velocity * dt) > 0.1f) break
+
+                    velocity = if (direction > 0f)
+                        maxOf(SNAP_VELOCITY, velocity - DECEL_RATE * dt)
+                    else
+                        minOf(-SNAP_VELOCITY, velocity + DECEL_RATE * dt)
+                }
+
+                // Phase 2: Smooth snap curve from SNAP_VELOCITY to 0.
+                //
+                // Velocity profile is piecewise-linear:
+                //   first half of time  → lose SNAP_STEEP_FRACTION of SNAP_VELOCITY (steeper)
+                //   second half of time → lose remaining fraction gently (lands softly)
+                //
+                // Integrating this profile gives a piecewise-quadratic easing.
+                // We compute the total distance D to the nearest item boundary, derive the
+                // curve duration from D, then animate exactly that distance via Animatable.
+                val snapDStop = SNAP_VELOCITY * SNAP_VELOCITY / (2f * DECEL_RATE)
+                val currentTotal = listState.firstVisibleItemIndex * itemSizePx +
+                    listState.firstVisibleItemScrollOffset
+                val naturalStop = currentTotal + direction * snapDStop
+                val targetTotal = if (direction > 0f)
+                    ceil(naturalStop.toDouble() / itemSizePx).toFloat() * itemSizePx
+                else
+                    floor(naturalStop.toDouble() / itemSizePx).toFloat() * itemSizePx
+
+                val dTotal = direction * (targetTotal - currentTotal)
+                if (dTotal < 0.5f) return 0f
+
+                // Piecewise-quadratic easing derived from piecewise-linear velocity:
+                //   f(p) for p ≤ 0.5 : 4p(1 - α·p) / (3 - 2α)
+                //   f(p) for p > 0.5  : [(2-α) + 4(1-α)(p-0.5)(1-(p-0.5))] / (3 - 2α)
+                // where α = SNAP_STEEP_FRACTION
+                val α = SNAP_STEEP_FRACTION
+                val denom = 3f - 2f * α
+                val snapEasing = Easing { p ->
+                    if (p <= 0.5f) {
+                        4f * p * (1f - α * p) / denom
+                    } else {
+                        val q = p - 0.5f
+                        ((2f - α) + 4f * (1f - α) * q * (1f - q)) / denom
+                    }
+                }
+                // Duration: T = 4·D / (V0·(3-2α))  [from integrating the velocity profile]
+                val snapDurationMs = (4f * dTotal / (SNAP_VELOCITY * denom) * 1000f)
+                    .toInt().coerceIn(16, 2000)
+
+                val scrollScope = this
+                val posAnim = Animatable(0f)
+                var lastAnimPos = 0f
+                posAnim.animateTo(
+                    targetValue = dTotal,
+                    animationSpec = tween(snapDurationMs, easing = snapEasing),
+                ) {
+                    scrollScope.scrollBy(direction * (value - lastAnimPos))
+                    lastAnimPos = value
+                }
+
+                return 0f
             }
         }
     }

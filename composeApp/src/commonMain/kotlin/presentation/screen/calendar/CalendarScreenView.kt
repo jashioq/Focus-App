@@ -4,7 +4,9 @@ package presentation.screen.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +49,11 @@ import kotlinx.datetime.toLocalDateTime
 import presentation.compose.component.button.CurrentMonthButton
 import presentation.compose.component.text.ReactiveSizeText
 import presentation.compose.component.transition.MorphTransition
+import presentation.compose.component.wheelPicker.WheelPicker
+import presentation.compose.component.wheelPicker.WheelPickerSection
+
+private val testWheelItems = (0 until 1000).flatMap { (0..99).map { n -> n.toString().padStart(2, '0') } }
+private const val testWheelInitialIndex = 500 * 100
 
 @Composable
 fun CalendarScreenView(
@@ -92,7 +99,8 @@ fun CalendarScreenView(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState()),
     ) {
         Row(
             modifier = Modifier
@@ -157,6 +165,14 @@ fun CalendarScreenView(
             dayContent = { day ->
                 Day(day, today, onDaySelected)
             },
+        )
+
+        WheelPicker(
+            sections = listOf(
+                WheelPickerSection(items = testWheelItems, initialIndex = testWheelInitialIndex),
+                WheelPickerSection(items = testWheelItems, initialIndex = testWheelInitialIndex),
+            ),
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
         )
     }
 }
