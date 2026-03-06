@@ -35,10 +35,13 @@ private const val DECEL_RATE = 2500f
 // Speed (px/s) at which Phase 1 ends and the snap curve begins.
 // Higher values = snap curve starts faster = shorter snap duration.
 // 250px/s keeps snap duration roughly equal to the old coast+decel approach.
-private const val SNAP_VELOCITY = 250f
+private const val SNAP_VELOCITY = 500f
 
-// Fraction of SNAP_VELOCITY lost in the FIRST half of the snap curve's time.
-// 0.8 means 80% of speed is gone by midpoint, leaving a gentle tail.
+// Minimum speed (px/s) used as the snap curve starting velocity for slow or zero-velocity releases.
+private const val MIN_SNAP_VELOCITY = 50f
+
+// Fraction of starting velocity lost in the FIRST half of the snap curve's time.
+// 0.75 means 75% of speed is gone by midpoint, leaving a gentle tail.
 private const val SNAP_STEEP_FRACTION = 0.75f
 
 @Composable
@@ -61,34 +64,49 @@ internal fun WheelColumnPicker(
         object : FlingBehavior {
             override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
                 val scaledVelocity = initialVelocity * flingVelocityMultiplier
-                if (abs(scaledVelocity) <= SNAP_VELOCITY) return 0f
+                val absScaled = abs(scaledVelocity)
 
                 val itemSizePx = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat()
                     ?: return 0f
 
-                val direction = sign(scaledVelocity)
-                var velocity = scaledVelocity
-
-                var prevNanos = 0L
-                withFrameNanos { prevNanos = it }
-
-                // Phase 1: Constant deceleration until snap velocity
-                while (abs(velocity) > SNAP_VELOCITY) {
-                    var currNanos = 0L
-                    withFrameNanos { currNanos = it }
-                    val dt = ((currNanos - prevNanos) / 1_000_000_000f).coerceAtMost(0.05f)
-                    prevNanos = currNanos
-
-                    val moved = scrollBy(velocity * dt)
-                    if (moved == 0f && abs(velocity * dt) > 0.1f) break
-
-                    velocity = if (direction > 0f)
-                        maxOf(SNAP_VELOCITY, velocity - DECEL_RATE * dt)
-                    else
-                        minOf(-SNAP_VELOCITY, velocity + DECEL_RATE * dt)
+                // Determine scroll direction and the velocity at which the snap curve starts.
+                val direction: Float
+                val curveStartVelocity: Float
+                if (absScaled > 0.5f) {
+                    direction = sign(scaledVelocity)
+                    curveStartVelocity = if (absScaled >= SNAP_VELOCITY) SNAP_VELOCITY
+                                         else maxOf(absScaled, MIN_SNAP_VELOCITY)
+                } else {
+                    // Near-zero release: snap to nearest item using scroll offset for direction.
+                    val scrollOffset = listState.firstVisibleItemScrollOffset.toFloat()
+                    if (scrollOffset < 0.5f) return 0f
+                    direction = if (scrollOffset > itemSizePx / 2f) 1f else -1f
+                    curveStartVelocity = MIN_SNAP_VELOCITY
                 }
 
-                // Phase 2: Smooth snap curve from SNAP_VELOCITY to 0.
+                // Phase 1: Constant deceleration (only for fast flings above SNAP_VELOCITY).
+                if (absScaled > SNAP_VELOCITY) {
+                    var velocity = scaledVelocity
+                    var prevNanos = 0L
+                    withFrameNanos { prevNanos = it }
+
+                    while (abs(velocity) > SNAP_VELOCITY) {
+                        var currNanos = 0L
+                        withFrameNanos { currNanos = it }
+                        val dt = ((currNanos - prevNanos) / 1_000_000_000f).coerceAtMost(0.05f)
+                        prevNanos = currNanos
+
+                        val moved = scrollBy(velocity * dt)
+                        if (moved == 0f && abs(velocity * dt) > 0.1f) break
+
+                        velocity = if (direction > 0f)
+                            maxOf(SNAP_VELOCITY, velocity - DECEL_RATE * dt)
+                        else
+                            minOf(-SNAP_VELOCITY, velocity + DECEL_RATE * dt)
+                    }
+                }
+
+                // Phase 2: Smooth snap curve from curveStartVelocity to 0.
                 //
                 // Velocity profile is piecewise-linear:
                 //   first half of time  → lose SNAP_STEEP_FRACTION of SNAP_VELOCITY (steeper)
@@ -97,7 +115,7 @@ internal fun WheelColumnPicker(
                 // Integrating this profile gives a piecewise-quadratic easing.
                 // We compute the total distance D to the nearest item boundary, derive the
                 // curve duration from D, then animate exactly that distance via Animatable.
-                val snapDStop = SNAP_VELOCITY * SNAP_VELOCITY / (2f * DECEL_RATE)
+                val snapDStop = curveStartVelocity * curveStartVelocity / (2f * DECEL_RATE)
                 val currentTotal = listState.firstVisibleItemIndex * itemSizePx +
                     listState.firstVisibleItemScrollOffset
                 val naturalStop = currentTotal + direction * snapDStop
@@ -124,7 +142,7 @@ internal fun WheelColumnPicker(
                     }
                 }
                 // Duration: T = 4·D / (V0·(3-2α))  [from integrating the velocity profile]
-                val snapDurationMs = (4f * dTotal / (SNAP_VELOCITY * denom) * 1000f)
+                val snapDurationMs = (4f * dTotal / (curveStartVelocity * denom) * 1000f)
                     .toInt().coerceIn(16, 2000)
 
                 val scrollScope = this
