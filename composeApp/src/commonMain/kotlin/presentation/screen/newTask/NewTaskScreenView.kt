@@ -7,9 +7,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -54,17 +51,14 @@ import org.jetbrains.compose.resources.painterResource
 import presentation.compose.PlatformBackHandler
 import presentation.compose.component.border.tiltBorder
 import presentation.compose.component.button.PrimaryButton
+import presentation.screen.newTask.view.ConfirmationView
+import presentation.screen.newTask.view.NameDescriptionView
+import presentation.screen.newTask.view.ScheduleView
+import presentation.screen.newTask.view.SessionsView
 import kotlin.math.roundToInt
 
 private val BoxShape = RoundedCornerShape(32.dp)
 private const val PAGE_COUNT = 4
-
-private val pageNames = listOf(
-    "Name & Description",
-    "Schedule",
-    "Sessions",
-    "Confirmation",
-)
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -81,7 +75,11 @@ fun NewTaskScreenView(
     var currentPage by remember { mutableIntStateOf(0) }
     var showDiscardDialog by remember { mutableStateOf(false) }
 
-    // Offset animatable for carousel slide: 0f = current page centered
+    var taskName by remember { mutableStateOf("") }
+    var taskDescription by remember { mutableStateOf("") }
+
+    val isNextEnabled = currentPage != 0 || taskName.isNotBlank()
+
     val slideOffset = remember { Animatable(0f) }
 
     val isEnterComplete = !animatedVisibilityScope.transition.isRunning &&
@@ -96,15 +94,12 @@ fun NewTaskScreenView(
     val navigateTo: (Int) -> Unit = { targetPage ->
         scope.launch {
             val direction = if (targetPage > currentPage) 1f else -1f
-            // slide out current
             slideOffset.animateTo(
                 direction * -1f,
                 animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
             )
             currentPage = targetPage
-            // snap to incoming side
             slideOffset.snapTo(direction * 1f)
-            // slide in new page
             slideOffset.animateTo(
                 0f,
                 animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
@@ -185,7 +180,6 @@ fun NewTaskScreenView(
                 .fillMaxSize()
                 .graphicsLayer { alpha = contentAlpha.value },
         ) {
-            // Back button
             IconButton(
                 onClick = { handleBack() },
                 modifier = Modifier
@@ -200,7 +194,6 @@ fun NewTaskScreenView(
                 )
             }
 
-            // Carousel pages
             CarouselPage(
                 slideOffset = slideOffset.value,
                 modifier = Modifier
@@ -208,19 +201,19 @@ fun NewTaskScreenView(
                     .padding(top = 64.dp, bottom = 120.dp)
                     .padding(horizontal = 24.dp),
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = pageNames[currentPage],
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
+                when (currentPage) {
+                    0 -> NameDescriptionView(
+                        name = taskName,
+                        description = taskDescription,
+                        onNameChange = { taskName = it },
+                        onDescriptionChange = { taskDescription = it },
                     )
+                    1 -> ScheduleView()
+                    2 -> SessionsView()
+                    3 -> ConfirmationView()
                 }
             }
 
-            // Bottom area: dots + optional done button
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -239,6 +232,7 @@ fun NewTaskScreenView(
                 } else {
                     PrimaryButton(
                         text = "Next",
+                        isEnabled = isNextEnabled,
                         onClick = { navigateTo(currentPage + 1) },
                     )
                 }
@@ -253,13 +247,7 @@ private fun CarouselPage(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    // slideOffset is in [-1, 1] where 0 = fully visible
-    // We use the full width for offset distance
-    val density = LocalDensity.current
     Box(modifier = modifier) {
-        // We need the actual width at layout time — use BoxWithConstraints-like approach via onGloballyPositioned,
-        // but simpler: just use a fraction of a large assumed width. We'll use offset fraction in dp
-        // instead by computing inside the Box content via layout size.
         OffsetContent(slideOffset = slideOffset, content = content)
     }
 }
