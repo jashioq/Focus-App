@@ -16,7 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +58,8 @@ internal fun WheelColumnPicker(
     enabled: Boolean,
     flingVelocityMultiplier: Float,
     onIndexChanged: (Int) -> Unit,
+    onItemSelected: ((String) -> Unit)? = null,
+    onItemHighlighted: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val safeInitialIndex = initialIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
@@ -164,11 +168,31 @@ internal fun WheelColumnPicker(
         }
     }
 
+    if (onItemHighlighted != null) {
+        val highlightedIndex = remember {
+            derivedStateOf {
+                val itemSize = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.size ?: 1
+                val idx = listState.firstVisibleItemIndex
+                val offset = listState.firstVisibleItemScrollOffset
+                if (offset > itemSize / 2) idx + 1 else idx
+            }
+        }
+        LaunchedEffect(listState) {
+            snapshotFlow { highlightedIndex.value }
+                .collect { index ->
+                    if (listState.isScrollInProgress && index in items.indices) {
+                        onItemHighlighted(items[index])
+                    }
+                }
+        }
+    }
+
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
             val snappedIndex = calculateSnappedIndex(listState)
             listState.scrollToItem(snappedIndex)
             onIndexChanged(snappedIndex)
+            if (snappedIndex in items.indices) onItemSelected?.invoke(items[snappedIndex])
         }
     }
 

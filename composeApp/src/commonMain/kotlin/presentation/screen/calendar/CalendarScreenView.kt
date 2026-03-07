@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import util.rememberHapticFeedback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +63,7 @@ fun CalendarScreenView(
     onScrollToCurrentMonth: () -> Unit,
     onDaySelected: (String) -> Unit,
 ) {
+    val haptic = rememberHapticFeedback()
     val currentMonth = state.currentMonth
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
     val startMonth = remember(currentMonth) { currentMonth.minusMonths(12) }
@@ -173,6 +175,8 @@ fun CalendarScreenView(
                 WheelPickerSection(items = testWheelItems, initialIndex = testWheelInitialIndex),
             ),
             modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+            onItemSelected = { _, _ -> haptic.performLightImpact() },
+            onItemHighlighted = { _, _ -> haptic.performLightImpact() },
         )
     }
 }

@@ -19,6 +19,8 @@ fun WheelPicker(
     visibleItemCount: Int = 7,
     flingVelocityMultiplier: Float = 0.4f,
     onSelectionChanged: (sectionIndex: Int, itemIndex: Int) -> Unit = { _, _ -> },
+    onItemSelected: ((sectionIndex: Int, item: String) -> Unit)? = null,
+    onItemHighlighted: ((sectionIndex: Int, item: String) -> Unit)? = null,
 ) {
     val pickerHeight = itemHeight * visibleItemCount
 
@@ -36,6 +38,12 @@ fun WheelPicker(
                         enabled = section.enabled,
                         flingVelocityMultiplier = flingVelocityMultiplier,
                         onIndexChanged = { index -> onSelectionChanged(sectionIndex, index) },
+                        onItemSelected = onItemSelected?.let { cb ->
+                            { item -> cb(sectionIndex, item) }
+                        },
+                        onItemHighlighted = onItemHighlighted?.let { cb ->
+                            { item -> cb(sectionIndex, item) }
+                        },
                         modifier = Modifier.fillMaxSize(),
                     )
                     section.leadingContent?.let { leading ->
