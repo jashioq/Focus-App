@@ -29,10 +29,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import util.Haptic
-import util.rememberHapticFeedback
 import presentation.compose.component.border.tiltBorder
 
 data class ScaleKeyframe(
@@ -41,11 +41,9 @@ data class ScaleKeyframe(
     val easing: Easing = EaseOut,
 )
 
-enum class HapticType { LIGHT, MEDIUM, HEAVY }
-
 data class HapticTick(
     val timeMs: Long,
-    val type: HapticType? = null,
+    val type: HapticFeedbackType? = null,
 )
 
 private val DefaultPressKeyframes = listOf(
@@ -58,22 +56,15 @@ private const val DefaultReleaseStiffness = Spring.StiffnessMedium
 
 private fun defaultHapticTicks(): List<HapticTick> =
     listOf(
-        HapticTick(timeMs = 0, type = HapticType.LIGHT),
-        HapticTick(timeMs = 200, type = HapticType.LIGHT),
-        HapticTick(timeMs = 400, type = HapticType.LIGHT),
-        HapticTick(timeMs = 600, type = HapticType.MEDIUM),
+        HapticTick(timeMs = 0, type = HapticFeedbackType.TextHandleMove),
+        HapticTick(timeMs = 200, type = HapticFeedbackType.TextHandleMove),
+        HapticTick(timeMs = 400, type = HapticFeedbackType.TextHandleMove),
+        HapticTick(timeMs = 600, type = HapticFeedbackType.LongPress),
 
-        HapticTick(timeMs = 1500, type = HapticType.LIGHT),
-        HapticTick(timeMs = 1600, type = HapticType.LIGHT),
-        HapticTick(timeMs = 1700, type = HapticType.MEDIUM),
+        HapticTick(timeMs = 1500, type = HapticFeedbackType.TextHandleMove),
+        HapticTick(timeMs = 1600, type = HapticFeedbackType.TextHandleMove),
+        HapticTick(timeMs = 1700, type = HapticFeedbackType.LongPress),
     )
-
-
-private fun Haptic.perform(type: HapticType) = when (type) {
-    HapticType.LIGHT -> performLightImpact()
-    HapticType.MEDIUM -> performMediumImpact()
-    HapticType.HEAVY -> performHeavyImpact()
-}
 
 @Composable
 fun SpringButton(
@@ -88,14 +79,14 @@ fun SpringButton(
     borderUpperAlpha: Float = 0.8f,
     alphaThresholdScale: Float = pressKeyframes.firstOrNull()?.targetScale ?: 1.3f,
     hapticTicks: List<HapticTick> = remember { defaultHapticTicks() },
-    snapHapticType: HapticType = HapticType.HEAVY,
+    snapHapticType: HapticFeedbackType = HapticFeedbackType.LongPress,
     glowRadius: Dp = 20.dp,
     glowIntensity: Float = 0.5f,
     shape: Shape = RoundedCornerShape(16.dp),
     scaleAnimatableOverride: Animatable<Float, AnimationVector1D>? = null,
     content: @Composable () -> Unit,
 ) {
-    val haptic = rememberHapticFeedback()
+    val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scaleAnimatable = scaleAnimatableOverride ?: remember { Animatable(1f) }
@@ -115,7 +106,7 @@ fun SpringButton(
                     val wait = tick.timeMs - elapsed
                     if (wait > 0) delay(wait)
                     elapsed = tick.timeMs
-                    tick.type?.let { haptic.perform(it) }
+                    tick.type?.let { haptic.performHapticFeedback(it) }
                 }
             }
 
@@ -128,7 +119,7 @@ fun SpringButton(
 
             // All keyframes completed — snap haptic, trigger action, spring back
             hapticJob.cancel()
-            haptic.perform(snapHapticType)
+            haptic.performHapticFeedback(snapHapticType)
             onClick()
             scaleAnimatable.animateTo(
                 targetValue = 1f,

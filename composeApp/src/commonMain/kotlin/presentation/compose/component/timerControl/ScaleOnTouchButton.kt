@@ -14,7 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import util.rememberHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 
 private const val DefaultScale = 1.15f
 private const val DefaultScaleDurationMs = 100
@@ -28,7 +29,7 @@ fun ScaleOnTouchButton(
     scaleDurationMs: Int = DefaultScaleDurationMs,
     content: @Composable () -> Unit,
 ) {
-    val haptic = rememberHapticFeedback()
+    val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isTouching = isPressed || isExternallyPressed
@@ -40,9 +41,9 @@ fun ScaleOnTouchButton(
                 targetValue = scale,
                 animationSpec = tween(scaleDurationMs, easing = FastOutSlowInEasing),
             )
-            haptic.performHeavyImpact()
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         } else if (scaleAnimatable.value != 1f) {
-            haptic.performHeavyImpact()
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             scaleAnimatable.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(scaleDurationMs, easing = FastOutSlowInEasing),

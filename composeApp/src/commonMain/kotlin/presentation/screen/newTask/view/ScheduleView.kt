@@ -8,7 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import util.rememberHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
 import presentation.compose.component.wheelPicker.WheelPicker
@@ -26,7 +27,7 @@ fun ScheduleView(
     defaultDeadline: LocalDate,
     modifier: Modifier = Modifier,
 ) {
-    val haptic = rememberHapticFeedback()
+    val haptic = LocalHapticFeedback.current
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -48,8 +49,8 @@ fun ScheduleView(
                     ),
                 ),
                 flingVelocityMultiplier = 0.8f,
-                onItemSelected = { _, _ -> haptic.performLightImpact() },
-                onItemHighlighted = { _, _ -> haptic.performLightImpact() },
+                onItemSelected = { _, _ -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                onItemHighlighted = { _, _ -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
             )
         }
 
@@ -67,8 +68,8 @@ fun ScheduleView(
                         trailingContent = { Text("m", style = MaterialTheme.typography.bodyLarge) },
                     ),
                 ),
-                onItemSelected = { _, _ -> haptic.performLightImpact() },
-                onItemHighlighted = { _, _ -> haptic.performLightImpact() },
+                onItemSelected = { _, _ -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                onItemHighlighted = { _, _ -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
             )
         }
 
@@ -88,8 +89,8 @@ fun ScheduleView(
                         initialIndex = (defaultStartDate.year - 2024).coerceIn(0, years.size - 1),
                     ),
                 ),
-                onItemSelected = { _, _ -> haptic.performLightImpact() },
-                onItemHighlighted = { _, _ -> haptic.performLightImpact() },
+                onItemSelected = { _, _ -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                onItemHighlighted = { _, _ -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
             )
         }
     }
