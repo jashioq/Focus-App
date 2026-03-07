@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -14,8 +15,8 @@ import androidx.compose.ui.unit.dp
 fun WheelPicker(
     sections: List<WheelPickerSection>,
     modifier: Modifier = Modifier,
-    itemHeight: Dp = 48.dp,
-    visibleItemCount: Int = 3,
+    itemHeight: Dp = 36.dp,
+    visibleItemCount: Int = 7,
     flingVelocityMultiplier: Float = 0.4f,
     onSelectionChanged: (sectionIndex: Int, itemIndex: Int) -> Unit = { _, _ -> },
 ) {
@@ -25,7 +26,7 @@ fun WheelPicker(
         Row(modifier = Modifier.fillMaxSize()) {
             sections.forEachIndexed { sectionIndex, section ->
                 Box(
-                    modifier = Modifier.weight(1f).height(pickerHeight),
+                    modifier = Modifier.weight(1f).height(pickerHeight).clipToBounds(),
                 ) {
                     WheelColumnPicker(
                         items = section.items,

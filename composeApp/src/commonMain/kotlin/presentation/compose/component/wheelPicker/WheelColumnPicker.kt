@@ -24,10 +24,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sign
+import kotlin.math.sin
 
 // Constant deceleration rate in px/s². Faster flings travel proportionally longer.
 private const val DECEL_RATE = 2500f
@@ -171,14 +174,14 @@ internal fun WheelColumnPicker(
 
     LazyColumn(
         state = listState,
-        modifier = modifier.height(pickerHeight),
+        modifier = modifier.height(pickerHeight).graphicsLayer { clip = false },
         contentPadding = PaddingValues(vertical = contentPadding),
         flingBehavior = flingBehavior,
         userScrollEnabled = enabled,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         items(items.size) { index ->
-            val (animatedAlpha, animatedRotationX) = calculateAnimatedAlphaAndRotationX(
+            val transforms = calculateItemTransforms(
                 firstVisibleItemIndex = listState.firstVisibleItemIndex,
                 firstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset,
                 pickerHeightPx = listState.layoutInfo.viewportSize.height.toFloat(),
@@ -191,8 +194,12 @@ internal fun WheelColumnPicker(
                     .height(itemHeight)
                     .wrapContentWidth()
                     .padding(horizontal = 12.dp)
-                    .alpha(animatedAlpha)
-                    .graphicsLayer { rotationX = animatedRotationX },
+                    .alpha(transforms.alpha)
+                    .graphicsLayer {
+                        rotationX = transforms.rotationX
+                        scaleY = transforms.scaleY
+                        translationY = transforms.translationY
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -216,25 +223,41 @@ private fun calculateSnappedIndex(listState: androidx.compose.foundation.lazy.La
     }
 }
 
-private fun calculateAnimatedAlphaAndRotationX(
+private data class ItemTransforms(
+    val alpha: Float,
+    val rotationX: Float,
+    val scaleY: Float,
+    val translationY: Float,
+)
+
+private fun calculateItemTransforms(
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffset: Int,
     pickerHeightPx: Float,
     index: Int,
     visibleItemCount: Int,
-): Pair<Float, Float> {
+): ItemTransforms {
     val singleItemHeight = pickerHeightPx / visibleItemCount
     val distanceToCenterIndex = index - firstVisibleItemIndex
     val distanceToSnap = distanceToCenterIndex * singleItemHeight.toInt() - firstVisibleItemScrollOffset
-    val distanceToSnapAbs = abs(distanceToSnap)
 
-    val alpha = if (distanceToSnapAbs <= singleItemHeight) {
-        1.2f - (distanceToSnapAbs / singleItemHeight)
-    } else {
-        0.2f
-    }
+    // normalizedPos: 0 at center, ±1 at top/bottom edge of the picker
+    val normalizedPos = (distanceToSnap / (pickerHeightPx / 2f)).coerceIn(-1f, 1f)
+    val angle = normalizedPos * (PI / 2)
 
+    // cosine curve: 1 at center, 0 at edges — squishes item height like a drum roll
+    val scaleY = cos(angle).toFloat().coerceIn(0f, 1f)
+    val linearAlpha = (1f - abs(normalizedPos)).coerceIn(0f, 1f)
+    val alpha = linearAlpha * linearAlpha  // quadratic: darkens much more aggressively away from center
     val rotationX = (-20f * (distanceToSnap / singleItemHeight)).takeUnless { it.isNaN() } ?: 0f
 
-    return alpha to rotationX
+    // Cylinder projection: shift items toward center so spacing matches the squish.
+    // On a drum, projected y = radius * sin(θ), flat list y = normalizedPos * pickerHeight/2.
+    // radius = pickerHeight/π keeps the arc length equal to the picker half-height.
+    val radius = pickerHeightPx / PI.toFloat()
+    val projectedY = radius * sin(angle).toFloat()
+    val flatY = normalizedPos * pickerHeightPx / 2f
+    val translationY = projectedY - flatY
+
+    return ItemTransforms(alpha, rotationX, scaleY, translationY)
 }

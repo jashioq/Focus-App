@@ -56,13 +56,11 @@ fun ScheduleView(
                         items = hours,
                         initialIndex = 1,
                         trailingContent = { Text("h", style = MaterialTheme.typography.bodyLarge) },
-//                        leadingContent = { Text("l", style = MaterialTheme.typography.bodyLarge) },
                     ),
                     WheelPickerSection(
                         items = minutes,
                         initialIndex = 0,
                         trailingContent = { Text("m", style = MaterialTheme.typography.bodyLarge) },
-//                        leadingContent = { Text("l", style = MaterialTheme.typography.bodyLarge) },
                     ),
                 ),
             )
